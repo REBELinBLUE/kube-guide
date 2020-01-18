@@ -44,9 +44,9 @@ The *Scheduler* takes care of actually placing your applications (known as *Pods
 
 The *Scheduler* should be deployed redundantly on all the control plane *Nodes*, however, only a single instance operates at any time, the *Nodes* hold leader elections to decide which is considered the "master"; if this instance disappears a new election is held automatically.
 
-#### Kube Controller Manager
+#### Kube-Controller Manager
 
-This is the main binary which was mentioned earlier, it is made up of a series of *Controllers*; although they can actually be run seperately, they are typically run as a single binary. While the *Scheduler* takes care of placing *Pods*, the *Controllers* take care of almost everything else. There are a variety of *Controllers*, typically one for each resource, such as the *Deployment Controller*, *StatefulSet Controller*, *Namespace Controller*, *ServiceAccount Controller*, *Job Controller* and a *Pod Garbage Collector Controller* etc. These are just some of the built-in controllers, but it is actually possible to create custom controllers yourself if you are willing to write some code. There are some *Controllers* you are expected to provide yourself, for instance, although Kubernetes has the concept of an *Ingress* it does not include an *Ingress Controller*, there are many implementations available such as [Traefik](https://containo.us/traefik/) and [Nginx Ingress](https://github.com/kubernetes/ingress-nginx).
+This is the main binary which was mentioned earlier, it is made up of a series of *Controllers*; although they can actually be run seperately, they are typically run as a single binary. While the *Scheduler* takes care of placing *Pods*, the *Controllers* take care of almost everything else. There are a variety of *Controllers*, typically one for each resource, such as the *Deployment Controller*, *StatefulSet Controller*, *Namespace Controller*, *ServiceAccount Controller*, *Job Controller* and a *Pod Garbage Collector Controller* etc. These are just some of the built-in controllers, but it is actually possible to create custom controllers yourself if you are willing to write some code. There are some *Controllers* you are expected to provide yourself, for instance, although Kubernetes has the concept of an *Ingress* it does not include an *Ingress Controller*.
 
 Like the *Scheduler*, the *Controllers* are deployed redundantly and elect a master.
 
@@ -62,15 +62,15 @@ Each *Controller* knows about a single resource type, for example the *Deploymen
 
 You can find all the controllers on the [Kubernetes Github project](https://github.com/kubernetes/kubernetes/tree/master/pkg/controller).
 
-#### Cloud Controller Manager
+#### Cloud-Controller Manager
 
-If your cluster is running on a cloud provider there is also a fifth component made up of more *Controllers* called *Cloud Controller*. These are responsible for interacting with your providers API and creating the actual hardware resources needed, for example with AWS the *Node Controller* would create a new EC2 instance if a new *Node* is needed, or a ELB if a *LoadBalancer* *Service* is required.
+If your cluster is running on a cloud provider there is also a fifth component made up of more *Controllers* called *Cloud Controllers*. These are responsible for interacting with your providers API and creating the actual hardware resources needed, for example with AWS the *Node Controller* would create a new EC2 instance if a new *Node* is needed, or a ELB if a *LoadBalancer* *Service* is required.
 
 ### Worker Node
 
 The workers are where the real work happens. They are machines which run your applications inside *Containers*, which are created from *Images*. Normally the container runtime used is Docker, however there are many others available, such as containerd, rkt and CRI-O.
 
-Beside the container runtime, there are only 2 components required to run a Kubernetes cluster; however there is a third component which is typically installed as well.
+Beside the container runtime, there are only 2 components required to run a Kubernetes cluster.
 
 Each of the workers look like the following
 
@@ -82,14 +82,41 @@ The *Kubelet* is the part of the worker which is responsible for ensuring that *
 
 *Kubelet* also deals with mounting *ConfigMap* & *Secrets* into containers, along with providing them as environment variables; finally it is also responsible for mounting *Persistent Volumes* and performs the *Liveness Probe* and *Readiness Probe* for keeping the health of the *Pod* in check.
 
-#### Kube Proxy
+#### Kube-proxy
 
-Despite the name, *Kube Proxy* is not actually a proxy (it was in early versions of Kubernetes and the name stuck). It is responsbile for ensuring traffic is routed corretly to *Pods*, to do this it makes heavy use of *iptables*; it updates the rules when new *Pods* are created so that traffic is routed correctly as well as deals with DNS for pointing *Services* to *Endpoints*, either locally or on another *Node* and manages port allocation for *NodePorts*.
+Despite the name, *Kube-proxy* does not normally act as an actual proxy. It is responsible for ensuring traffic is routed correctly to *Pods*, to do this it makes heavy use of *iptables*; it updates the rules when new *Pods* are created so that traffic is routed correctly as well as deals with DNS for pointing *Services* to *Endpoints*, either locally or on another *Node* and manages port allocation for *NodePorts*. If your operating system doesn't have a packet filtering layer such as iptables then *Kube-proxy* will act as a proxy and forward the requests itself, although this is not the recommended mode of operation.
+
+### Addons
+
+Although that is everything which is needed to run a cluster, there are a few optional addons which are typically installed, although none of these are strictly required for the cluster to function the first 2 at least are recommended if you want a functioning *Pod* network. They all run as *Pods* on the cluster.
+
+A brief overview is provided below, some of these will be discussed in more detail in a later section.
 
 #### Container Network Interface
 
-Although not part of Kubernetes, you are expected to provide a CNI so that *Pods* are addressable; without a CNI, none of the network functionality works so Kubernetes would only be useful for running *Jobs* and even then not if the *Pod* needed any network access. Kubernetes does not come with a CNI included as there are many available implementations available such as [WeaveNet](https://www.weave.works/oss/net/), [Flannel](https://github.com/coreos/flannel) and [Calico](https://github.com/projectcalico/cni-plugin) due to the [CNI being an open standard](https://github.com/containernetworking/cni).
+You are expected to provide a CNI so that *Pods* are addressable; without a CNI, none of the network functionality works so Kubernetes would only be useful for running *Jobs* and even then not if the *Pod* needed any network access. Kubernetes does not come with a CNI included as there are many available implementations available such as [WeaveNet](https://www.weave.works/oss/net/), [Flannel](https://github.com/coreos/flannel) and [Calico](https://github.com/projectcalico/cni-plugin) due to the [CNI being an open standard](https://github.com/containernetworking/cni).
 
-The CNI does not need to be an installed as a process on the host, instead it is typically installed as a *DaemonSet* (more on those later) on the cluster itself; it creates an overlay network, which is a virtual network, so that *Pods* are able to communicate regardless of the underlying network infrastructure.
+It is typically installed as a *DaemonSet* (more on those later) on the cluster itself but with privileged access to the host system; it creates an overlay network, which is a virtual network, so that *Pods* are able to communicate regardless of the underlying network infrastructure.
 
 Commonly, Flannel and Calico are used together, this configuration is known as [Canal](https://docs.projectcalico.org/latest/getting-started/kubernetes/installation/flannel); in this configuration, Flannel is responsible for the overlay network while Calico is responsible for enforcing the *NetworkPolicy* (like *Ingress*, it is another resource which Kubernetes defines but does not provide an implementation of out of the box).
+
+#### DNS
+
+The cluster should have a DNS server installed, this will allow *Services* and *Pods* to be addressable by their name. This is independent from the system DNS, most clusters use [CoreDNS](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/#coredns).
+
+#### Ingress Controller  
+
+We previously mentioned that Kubernetes does not include an implementation of the *Ingress Controller*, there are many options available, you can even install multiple implementations. Whether you install one, and which you install, will depend upon your requirements.
+Popular implementations include [Traefik](https://containo.us/traefik/) and [NGINX Ingress](https://github.com/kubernetes/ingress-nginx).
+
+#### UI
+
+[Kubernetes Dashboard](https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/) is a web application which allows users to manage the cluster from their browser.
+
+#### Logging
+
+The cluster will probably need a method of aggregating and persisting all the logs in a central location as logs do not persist when a container crashes or a *Pod* is destroyed. There are several available solutions such as [fluentd](https://www.fluentd.org) with [ELK stack](https://www.elastic.co/what-is/elk-stack), or [Grafana Loki](https://github.com/grafana/loki).
+
+#### Monitoring
+
+You will also probably want to monitor the cluster to be able to detect performance issues and react to them. [Metrics Server](https://github.com/kubernetes-sigs/metrics-server) is used to monitor the resource usage and can be used by the *HorizontalPodAutoscalers*. Alongside the Metrics Server, you will typically install [Prometheus](https://prometheus.io) as a full metrics system, many applications natively expose metrics to Prometheus and there are many "exporters" available to adapt different metrics data sources to the Prometheus format.
