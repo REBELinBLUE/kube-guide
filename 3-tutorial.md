@@ -6,7 +6,7 @@ You also need to install [kubectl](https://kubernetes.io/docs/tasks/tools/instal
 
 ## Cluster Setup
 
-k3d is a tool for running a virtual cluster in Docker, the first step is to bootstrap a cluser, for this we will create 3 workers and direct port `80` on the local machine to port `80` on the cluster.
+k3d is a tool for running a virtual cluster in Docker, the first step is to bootstrap a cluster, for this we will create 3 workers and direct port `80` on the local machine to port `80` on the cluster.
 
 ```bash
 ❯ k3d create --name dev2 --api-port 6551 --publish 80:80 --workers 3
@@ -78,7 +78,7 @@ k3d-dev-worker-1   Ready    <none>   8m34s   v1.16.3-k3s.2
 k3d-dev-worker-2   Ready    <none>   8m34s   v1.16.3-k3s.2
 ```
 
-In a normal Kubernetes cluster *Pods* should not be scheduled on the master *Nodes*, however as k3d is a virtual cluster it is not set up like this. You can change this by applying a *taint* to the *Node*, *taints* are a way to tell the *Scheduler* not to schedule *Pods* on the *Node*. By default master has a *taint* however, they can also be used for other things, for example if you have a *Node* with a special GPU or a slow hard drive you would apply a *taint* to prevent scheduling. 
+In a normal Kubernetes cluster *Pods* should not be scheduled on the master *Nodes*, however as k3d is a virtual cluster it is not set up like this. You can change this by applying a *taint* to the *Node*, *taints* are a way to tell the *Scheduler* not to schedule *Pods* on the *Node*. By default, master has a *taint*, however they can also be used for other things, for example if you have a *Node* with a special GPU or a slow hard drive you would apply a *taint* to prevent scheduling.
 
 *Pods* can define *tolerations* to say that they are able to tolerate particular *taints*, such as a slow hard drive. However, having a *toleration* does not mean the *Pod* will be scheduled on the *Node*, just that it can be; if you want to ensure the *Pod* is scheduled on *Nodes* with particular *taints* you would use *nodeAffinity* (you can also use a *nodeSelector* but this simply allows you to specify that it must be scheduled on a *Node* with specified *Labels*, without enforcing that others *Pods* should not be).
 
@@ -166,7 +166,7 @@ Let's now create the *Pod*.
 pod/kuard created
 ```
 
-in the other terminal the output should change to include the following
+in the other terminal the output should change to include something similar to the following
 
 
 ```bash
@@ -224,9 +224,9 @@ spec:
 
 As previous, you can use the `kubectl explain` command to get an explaination of each of these fields.
 
-The `metadata.labels` are not needed, but it is common practice to use the same *Labels* on all resources belonging to an application. 
+The `metadata.labels` are not needed, but it is common practice to use the same *Labels* on all resources belonging to an application.
 
-The important thing here is `spec.template`, this defines the *Pod* and is similar to the previous file, you will notice though that this time we have a `labels.app` field. there are 2 reasons for this, firstly any *Pods* created by the *Deployment* will not have a name you can specify (although the name is based on the *Deployment* name) so you can use the *Label* to query for *Pods* with the known value; secondly you'll use the same value in `spec.selector.matchLabels` so that the *ReplicaSet* which is created knows which *Pods* belong to it.
+The important thing here is `spec.template`, this defines the *Pod* and is similar to the previous file, you will notice though that this time we have a `labels.app` field. There are 2 reasons for this, firstly any *Pods* created by the *Deployment* will not have a name you can specify (although the name is based on the *Deployment* name) so you can use the *Label* to query for *Pods* with the known value; secondly you'll use the same value in `spec.selector.matchLabels` so that the *ReplicaSet* which is created knows which *Pods* belong to it.
 
 Now apply the file
 
@@ -284,7 +284,9 @@ This is how Kubernetes performs zero downtime (also called blue/green or A/B) de
 
 Old *ReplicaSets* are deleted based on the `spec.revisionHistoryLimit` field of the *Deployment*, which default is set to 10.
 
-Finally, let's clean up. You can delete the resource manually, but you would need to delete the *Deployment* otherwise the other restores will be recreated automatically (demostrating again that the cluster is self healing). This time though let's delete using the manifest file, this is normally a better idea as it means you don't accidentially leave any orphaned resources.
+Finally, let's clean up. You can delete the resources manually, but you would need to delete the *Deployment* otherwise the other restores will be recreated automatically (demostrating again that the cluster is self healing). Try deleting the *ReplicaSet* to see that is it recreated, along with a new *Pod*, this shows that the *Controllers* are working as previously described.
+
+Once you are finished, delete using the manifest file, this is normally a better idea as it means you don't accidentially leave any orphaned resources.
 
 ```bash
 ❯ kubectl delete -f 2-deployment.yaml
@@ -597,7 +599,7 @@ NAME              DATA   AGE
 configmap/kuard   3      14s
 ```
 
-Now we will update the *Deployment* to make USE of the *ConfigMap*.
+Now we will update the *Deployment* to make use of the *ConfigMap*.
 
 ```yaml
 apiVersion: apps/v1
@@ -645,7 +647,7 @@ Apply the manifest for the *Deployment* and we will see the result. Visit the ap
 
 We previously talked about how the mounted *ConfigMap* is updated in the container if you change it, but there is a pitfull.
 
-Edit the `kuard.json` key in the *ConfigMap* and apply it again. After a few seconds, if you use the "File System Browser" to view the `/config/kuard.json` file you will see that it has been updated, however if you view the `/app/config.json` file it [still has the old value](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically); this is an important distinction to be aware of. 
+Edit the `kuard.json` key in the *ConfigMap* and apply it again. After a few seconds, if you use the "File System Browser" to view the `/config/kuard.json` file you will see that it has been updated, however if you view the `/app/config.json` file it [still has the old value](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically); this is an important distinction to be aware of.
 
 Next, let's try using the *ConfigMap* to populate environment variables, update the manifest like the following.
 
@@ -724,4 +726,9 @@ Apply the manifest and then visit the application again. Select the "Server Env"
 
 ![Server Env Variables](./images/browser2.png)
 
-### Using Secrets 
+### Using Secrets
+
+## Persisting Data
+
+## Maintaining Application and Cluster Health
+

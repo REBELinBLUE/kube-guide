@@ -2,7 +2,7 @@
 
 There are many different resource definitions in Kubernetes, and with the help of *Custom Resource Defintions* it is possible to define new ones as well, many applications use CRDs to provide a Kubernetes native experience for configuring them, these are often referred to as [Kubernetes Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
 
-Below you will find explanations of many of the core resources. As the *API Server* exposing all the resources using [OpenAPI](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#openapi-and-swagger-definitions) it is possible to get a list of all resource types available on a cluster but running the command `kubectl api-resources`, you can also find the core resource types in the [documentation](https://kubernetes.io/docs/reference/kubectl/overview/#resource-types); you can get an explaination of a resource using `kubectl explain <resource>` and even an explaination of an individual field using `kubectl explain <resource>.<fieldName>[.<fieldName>]`.
+Below you will find explanations of many of the core resources. As the *API Server* exposes all the resources using [OpenAPI](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#openapi-and-swagger-definitions) it is possible to get a list of all resource types available on a cluster by running the command `kubectl api-resources`, you can also find the core resource types in the [documentation](https://kubernetes.io/docs/reference/kubectl/overview/#resource-types); you can get an explaination of a resource using `kubectl explain <resource>` and even an explaination of an individual field using `kubectl explain <resource>.<fieldName>[.<fieldName>]`.
 
 Resources are either scoped to a *Namespace* or are cluster wide, the output of `kubectl api-resources` will tell you whether a resource is namespaced or not, but you can add the parameter `--namespaced=true|false` to get only those with a specific scope.
 
@@ -36,7 +36,7 @@ A *Deployment* will create a *ReplicaSet* which will ensure that your applicatio
 
 ### StatefulSet
 
-Whilst you would normally be deploying stateless applications, there are times when you need state in your applications, this is what a *StatefulSet* is used for. Unlike *ReplicaSets* there is no high level abstraction so you would create the *StatefulSet* directly, like a *ReplicaSet* it is responsbile for creating *Pods* and scaling them. Unlike a *ReplicaSet* the *Pods* are not interchangeable, they are created in order and with predictable names, for example in a typical *ReplicaSet* you may end up with *Pods* called "myapp-589bd66f5" and "myapp-6bd8b7784f", but when creating *StatefulSets* your *Pods* will be called "myapp-0", "myapp-1" etc which persists if a *Pod* dies and is rescheduled.
+Whilst you would normally be deploying stateless applications, there are times when you need state in your applications, this is what a *StatefulSet* is used for. Unlike *ReplicaSets* there is no high level abstraction so you would create the *StatefulSet* directly, like a *ReplicaSet* it is responsbile for creating *Pods* and scaling them. Unlike a *ReplicaSet* the *Pods* are not interchangeable, they are created in order and with predictable names, for example in a typical *ReplicaSet* you may end up with *Pods* called "myapp-589bd66f5-t7pr2" and "myapp-589bd66f5-r4kxr" (the first part "myapp-589bd66f5" matches the *ReplicaSet*), but when creating *StatefulSets* your *Pods* will be called "myapp-0", "myapp-1" etc which persists if a *Pod* dies and is rescheduled.
 
 This means that *StatefulSets* perform updates in a different manner to *Deployments* if you change the image then *Pods* need to be destroyed and recreated in order.
 
@@ -151,7 +151,7 @@ Kubernetes distinguishes between the concept of a user account and a service acc
 
 ### ResourceQuota
 
-*ResourceQuotas* sets aggregate resource restrictions enforced on a per *Namespace* basis.
+*ResourceQuotas* set aggregate resource restrictions enforced on a per *Namespace* basis.
 
 ### LimitRange
 
@@ -163,11 +163,11 @@ The *HorizontalPodAutoscaler* defines rules for scaling the *Pods* in a *Replica
 
 ### NetworkPolicy
 
-By default, *Pods* are non-isolated and accept all traffic, this can be restricted by a *NetworkPolicy*; they can be applied on a per *Pod* or a per *Namespace* basis.
+By default, *Pods* are non-isolated and accept all traffic, this can be restricted by a *NetworkPolicy* which can be applied on a per *Pod* or a per *Namespace* basis.
 
 ### PodSecurityPolicy
 
-A *PodSecurityPolicy* is a cluster level resource which controls sensitive aspects of a *Pod* specification, such as which *Volume* types can be used, which user containers can run as and which Linux capabilities can be used.
+A *PodSecurityPolicy* is a cluster level resource which controls sensitive aspects of a *Pod* specification, such as which *Volume* types can be used, the users that containers can run as and which Linux capabilities can be used.
 
 ### PodDisruptionBudget
 
