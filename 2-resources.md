@@ -143,7 +143,7 @@ Kubernetes distinguishes between the concept of a user account and a service acc
 
 ### Role / ClusterRole
 
-*Roles* are bound to a *Namespace*, where as *ClusterRoles* are cluster wide, they specify which resources can be accessed and what actions (verbs) can be performed.
+*Roles* are scoped to a *Namespace*, where as *ClusterRoles* are cluster wide, they specify which resources can be accessed and what actions (verbs) can be performed.
 
 ### RoleBinding / ClusterRoleBinding
 
@@ -155,7 +155,7 @@ Kubernetes distinguishes between the concept of a user account and a service acc
 
 ### LimitRange
 
-A *LimitRange* sets the resources limits for *Pods* and containers, if you create a *Pod* outside of the limits it was be rejected.
+A *LimitRange* sets the resources limits for *Pods* and containers, if you create a *Pod* outside of the limits it will be rejected.
 
 ### HorizontalPodAutoscaler
 
@@ -171,4 +171,4 @@ A *PodSecurityPolicy* is a cluster level resource which controls sensitive aspec
 
 ### PodDisruptionBudget
 
-The *PodDisruptionBudget* specifies the percentage of *Pod* replicas which can be unavailable, for example during a rolling update.
+The *PodDisruptionBudget* specifies the percentage of *Pod* replicas which can be unavailable, for example during a rolling update or when draining a *Node* (evicting all the *Pods*) so that it can be restarted to perform a OS update.
