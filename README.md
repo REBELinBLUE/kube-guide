@@ -11,3 +11,5 @@
 * [What happens when.... Kubernetes edition](https://github.com/jamiehannaford/what-happens-when-k8s) - A step by step walkthrough of exactly what happens when you run `kubectl run nginx --image=nginx --replicas=3`.
 * [Awesome Kubernetes](https://github.com/ramitsurana/awesome-kubernetes) - Like all other "Awesome" lists but for Kubernetes.
 * [Kubernetes on Hypriot](http://github.com/REBELinBLUE/k8s-on-hypriot) - My repository for setting up my homelab cluster consisting of 4 * Raspberry Pi 4.
+
+![Kubernetes, So Hot Right Now](https://media.makeameme.org/created/kubernetes-so-hot.jpg)

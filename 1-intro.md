@@ -104,7 +104,7 @@ Commonly, Flannel and Calico are used together, this configuration is known as [
 
 The cluster should have a DNS server installed, this will allow *Services* and *Pods* to be addressable by their name. This is independent from the system DNS, most clusters use [CoreDNS](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/#coredns).
 
-#### Ingress Controller  
+#### Ingress Controller
 
 We previously mentioned that Kubernetes does not include an implementation of the *Ingress Controller*, there are many options available, you can even install multiple implementations. Whether you install one, and which you install, will depend upon your requirements.
 Popular implementations include [Traefik](https://containo.us/traefik/) and [NGINX Ingress](https://github.com/kubernetes/ingress-nginx).
