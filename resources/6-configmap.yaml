@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kuard
+  labels:
+    app: kuard
+data:
+  kuard.conf: |
+    parameter1=value1
+    parameter2=value2
+    parameter3=value3
+    parameter4=value4
+  kuard.json: |
+    {
+      "foo": "bar",
+      "baz": "qux",
+      "bar": "foo"
+    }
+  token: my-api-token

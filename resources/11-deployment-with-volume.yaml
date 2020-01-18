@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuard
+spec:
+  selector:
+    matchLabels:
+      app: kuard
+  template:
+    metadata:
+      labels:
+        app: kuard
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kuard-config
+        - name: tls-certs
+          secret:
+            secretName: kuard-tls
+        - name: kuard-data
+          persistentVolumeClaim:
+            claimName: kuard-claim
+      containers:
+        - name: kuard
+          image: gcr.io/kuar-demo/kuard-amd64:purple
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: config-volume
+              mountPath: /app/.env
+              subPath: my-config.env
+            - name: tls-certs
+              mountPath: /tls
+            - name: tls-certs
+              mountPath: /app/password.txt
+              subPath: secret-password
+            - name: kuard-data
+              mountPath: /data
+          env:
+            - name: ANOTHER_PARAM
+              valueFrom:
+                configMapKeyRef:
+                  name: kuard-config
+                  key: another-param
+            - name: EXTRA_PARAM
+              valueFrom:
+                configMapKeyRef:
+                  name: kuard-config
+                  key: extra-param
+            - name: FOO
+              value: bar
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kuard-tls
+                  key: secret-password
+          command:
+            - "/kuard"
+            - "$(EXTRA_PARAM)"

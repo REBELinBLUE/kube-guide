@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuard
+spec:
+  selector:
+    matchLabels:
+      app: kuard
+  replicas: 3
+  minReadySeconds: 15
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1 # Maximum above replicas
+      maxUnavailable: 1 # Maximum below replicas
+  template:
+    metadata:
+      labels:
+        app: kuard
+    spec:
+      tolerations:
+        - key: "node.kubernetes.io/unreachable"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 5
+        - key: "node.kubernetes.io/not-ready"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 5
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kuard-config
+        - name: tls-certs
+          secret:
+            secretName: kuard-tls
+        # - name: kuard-data
+        #   persistentVolumeClaim:
+        #     claimName: kuard-claim
+      containers:
+        - name: kuard
+          image: gcr.io/kuar-demo/kuard-amd64:purple # :blue :green
+          imagePullPolicy: IfNotPresent # Never or Always
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: config-volume
+              mountPath: /app/.env
+              subPath: my-config.env
+            - name: tls-certs
+              mountPath: /tls
+            - name: tls-certs
+              mountPath: /app/password.txt
+              subPath: secret-password
+        		# - name: kuard-data
+        		#   mountPath: /data
+          env:
+            - name: ANOTHER_PARAM
+              valueFrom:
+                configMapKeyRef:
+                  name: kuard-config
+                  key: another-param
+            - name: EXTRA_PARAM
+              valueFrom:
+                configMapKeyRef:
+                  name: kuard-config
+                  key: extra-param
+            - name: FOO
+              value: bar
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kuard-tls
+                  key: secret-password
+          command:
+            - "/kuard"
+            - "$(EXTRA_PARAM)"
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: 8080
+            initialDelaySeconds: 5 # Wait before first probe
+            timeoutSeconds: 1 # Maximum time to wait for probe
+            periodSeconds: 10 # How often to perform probe
+            failureThreshold: 3 # Number of consecutive failures before killing the pod
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: "256Mi"
