@@ -732,4 +732,6 @@ Apply the manifest and then visit the application again. Select the "Server Env"
 
 ## Maintaining Application and Cluster Health
 
+## Helm
+
 ## Further Reading
