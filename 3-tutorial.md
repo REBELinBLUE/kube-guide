@@ -728,6 +728,149 @@ Apply the manifest and then visit the application again. Select the "Server Env"
 
 ### Using Secrets
 
+Now that we have used *ConfigMaps* we will try the same with *Secrets*.
+
+Creating the file `7-secret.yaml` with the following content
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kuard
+  labels:
+    app: kuard
+type: Opaque
+data:
+  secret-password: d2VsY29tZXdlbGNvbWUxIQ==
+```
+
+Apply the file as usual
+
+```bash
+❯ kubectl apply -f 7-secret.yaml
+secret/kuard created
+```
+
+You will see that the resource is created
+
+```bash
+NAME                         TYPE                                  DATA   AGE
+secret/kuard                 Opaque                                1      39s
+```
+
+You will notice that there is a "TYPE" field, normally you won't need to worry about this, it is used for programmatic handling of the secret data and is normally only set when using the command line (explained below). 
+The `Opaque` *Secret* is the generic type for handling unstructured key/value pairs, there are a few other types you will encounter
+
+* `kubernetes.io/service-account-token` - Created by Kubernetes to hold the token for *ServiceAccounts*
+* `kubernetes.io/tls` - Used to store certificates and their keys
+* `kubernetes.io/dockerconfigjson` - Used to store docker credentials for autheticating with registries (you may see this as `kubernetes.io/dockercfg` also).
+
+#### TLS Secret
+
+So that you see how they work we will see a TLS secret.
+
+First, we need to actually create the certificate. Use the `openssl` to generate a certificate/key pair, following the prompts, for now you can enter any values.
+
+```bash
+openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout tls.key -out tls.cert
+Generating a 2048 bit RSA private key
+...............................................................................................................................................+++
+............................+++
+writing new private key to 'key.pem'
+-----
+...
+```
+
+Once finished you should have 2 files, `tls.key` which is the private key, and `tls.cert` which is the actually certificate.
+
+Now, to apply create a Kubernetes secret you use the following command
+
+```bash
+❯ kubectl create secret tls kuard-tls --cert=tls.cert --key=tls.key
+secret/kuard-tls created
+```
+
+You when then once more, see a new resource
+
+```bash
+NAME                         TYPE                                  DATA   AGE
+secret/kuard-tls             kubernetes.io/tls                     2      24s
+```
+
+If you get the *Secret* you will see it is essentially a secret with 2 key/value pairs with the content of the files base64 encoded (you will see different additional fields, such as `uid`).
+
+```bash
+❯ kubectl get secret kuard-tls -o yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kuard-tls
+  namespace: default
+type: kubernetes.io/tls
+data:
+  tls.crt: <DATA REDACTED FOR SPACE>
+  tls.key: <DATA REDACTED FOR SPACE>
+```
+
+The reason for the different `type` is so that applications such as [cert-manager](https://cert-manager.io) and the *Ingress Controller* know that the *Secret* contains a certificate so can use it. (Shortly we will update the *Ingress* to use a certifcate for HTTPS access).
+
+#### Docker Configuration
+
+The other type of *Secret* you may interact with is for storing Docker configuration, this is so that images can be pulled from private registries; you would supply the *Secret* name as the field `imagePullSecrets` on your *Pod* spec.
+
+```bash
+❯ kubectl explain pod.spec.imagePullSecrets
+KIND:     Pod
+VERSION:  v1
+
+RESOURCE: imagePullSecrets <[]Object>
+
+DESCRIPTION:
+     ImagePullSecrets is an optional list of references to secrets in the same
+     namespace to use for pulling any of the images used by this PodSpec. If
+     specified, these secrets will be passed to individual puller
+     implementations for them to use. For example, in the case of docker, only
+     DockerConfig type secrets are honored. More info:
+     https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
+
+     LocalObjectReference contains enough information to let you locate the
+     referenced object inside the same namespace.
+
+FIELDS:
+   name	<string>
+     Name of the referent. More info:
+     https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+``` 
+
+To create a Docker secret simply run the following command
+
+```
+❯ kubectl create secret docker-registry my-private-registry --docker-server=registry.example.com --docker-username=kubernetes --docker-password=password --docker-email=kubernetes@example.com
+secret/my-private-registry created
+```
+
+If you retrieve the *Secret* you will see it contains a Docker configuration file (again, base64 encoded).
+
+```bash
+❯ kubectl get secret my-private-registry -o yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-private-registry
+  namespace: default
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJyZWdpc3RyeS5leGFtcGxlLmNvbSI6eyJ1c2VybmFtZSI6Imt1YmVybmV0ZXMiLCJwYXNzd29yZCI6InBhc3N3b3JkIiwiZW1haWwiOiJrdWJlcm5ldGVzQGV4YW1wbGUuY29tIiwiYXV0aCI6ImEzVmlaWEp1WlhSbGN6cHdZWE56ZDI5eVpBPT0ifX19
+```
+
+#### Opaque Secrets
+
+The majority of the time you will be creating opaque secrets. You are probably thinking something along the lines of "What? Do I need to go the the effort of base64 encoding my values all the damn time?", luckily the answer is no.
+
+There are 2 ways to go about this, the first is with a YAML file (remember though, you probably don't want to commit your *Secrets* to a repository) and the second is with the command line.
+
+First, let's see how to do it with YAML files.  
+
 ## Persisting Data
 
 ## Maintaining Application and Cluster Health
