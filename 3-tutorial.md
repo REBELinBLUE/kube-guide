@@ -1077,7 +1077,7 @@ warning that the certificate is not valid, this is because the default certifica
 
 ![Certificate Error](./images/browser4.png)
 
-Now we will update the *Ingress* to use the certificate we previously created. To do this we add `spec.tls` to the 
+Let's update the *Ingress* to use the certificate we previously created. To do this we add `spec.tls` to the 
 *Ingress*, this tells the *Ingress Controller* where it can find the certificate and which host it applies to
 (as you can have multiple hosts in the same *Ingress*).
 
