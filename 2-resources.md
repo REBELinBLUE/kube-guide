@@ -175,19 +175,37 @@ Then are many other resource types which you may hear talked about, along with t
 
 ![](./images/icons/resources/sa-128.png)
 
-Kubernetes distinguishes between the concept of a user account and a service account; a user account is for humans, *ServiceAccounts* are for processes which run in *Pods*. You can specify a *ServiceAccount* when defining a *Pod*, if you don't then the "default" *ServiceAccount* is used. The token for the *ServiceAccount* is automatically mounted to each container in a *Pod* so that the application can use it to authenticate with Kubernetes. They are scoped to a *Namespace*, where as user accounts are global. Normal users are not represented by Kubernetes resources, they are assumed to be managed by outside services; see the [documentation for more information](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes).
+Kubernetes distinguishes between the concept of a user account and a service account; a user account is for humans, *ServiceAccounts* are for processes which run in *Pods*. You can specify a *ServiceAccount* when defining a *Pod*, if you don't then the "default" *ServiceAccount* is used. The token for the *ServiceAccount* is automatically mounted to each container in a *Pod* so that the application can use it to authenticate with Kubernetes. They are scoped to a *Namespace*, where as user accounts are global. Normal users and groups are not represented by Kubernetes resources, they are assumed to be managed by outside services; see the [documentation for more information](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes).
 
-### Role / ClusterRole
+### Role
 
-![](./images/icons/resources/role-128.png) ![](./images/icons/resources/c-role-128.png)
+![](./images/icons/resources/role-128.png) 
 
-*Roles* are scoped to a *Namespace*, where as *ClusterRoles* are cluster wide, they specify which resources can be accessed and what actions (verbs) can be performed.
+*Roles* are scoped to a *Namespace* they specify which resources can be accessed and what actions (verbs) can be performed. 
 
-### RoleBinding / ClusterRoleBinding
+### ClusterRole
 
-![](./images/icons/resources/rb-128.png) ![](./images/icons/resources/crb-128.png)
+![](./images/icons/resources/c-role-128.png)
 
-*RoleBindings* and *ClusterRoleBindings* bind *Roles* and *ClusterRoles* respectively to user accounts, user groups and *ServiceAccounts*.
+The same as *Role* but cluster wide 
+
+### RoleBinding
+
+![](./images/icons/resources/rb-128.png)
+
+*RoleBindings* binds *Roles* to user accounts, user groups and *ServiceAccounts*.
+
+### ClusterRoleBinding
+
+![](./images/icons/resources/crb-128.png)
+ 
+The same as for *RoleBindings* but for *ClusterRoles* 
+
+### CustomResourceDefinition
+
+![](./images/icons/resources/crd-128.png)
+
+Applications can define their own resources by using a *CustomResourceDefinition*, these allow users to configure applications in a Kubernetes native way.
 
 ### ResourceQuota
 
@@ -222,9 +240,3 @@ A *PodSecurityPolicy* is a cluster level resource which controls sensitive aspec
 ### PodDisruptionBudget
 
 The *PodDisruptionBudget* specifies the percentage of *Pod* replicas which can be unavailable, for example during a rolling update or when draining a *Node* (evicting all the *Pods*) so that it can be restarted to perform a OS update.
-
-### CustomResourceDefinition
-
-![](./images/icons/resources/crd-128.png)
-
-Applications can define their own resources by using a *CustomResourceDefintion* to create new resource types.

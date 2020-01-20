@@ -106,7 +106,7 @@ Despite the name, *Kube-proxy* does not normally act as an actual proxy. It is r
 
 ### Addons
 
-Although that is everything which is needed to run a cluster, there are a few optional addons which are typically installed, although none of these are strictly required for the cluster to function the first 2 at least are recommended if you want a functioning *Pod* network. They all run as *Pods* on the cluster.
+Although that is everything which is needed to run a cluster, there are a few optional addons which are typically installed, although none of these are strictly required for the cluster to function the first 2 at least are recommended if you want a functioning network. They all run as *Pods* on the cluster.
 
 A brief overview is provided below, some of these will be discussed in more detail in a later section.
 

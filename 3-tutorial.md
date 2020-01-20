@@ -11,7 +11,7 @@ Please ensure that you have a recent version of `kubectl`, the version installed
 k3d is a tool for running a virtual cluster in Docker, the first step is to bootstrap a cluster, for this we will create 3 workers and direct port `80` on the local machine to port `80` on the cluster.
 
 ```bash
-❯ k3d create --name dev --api-port 6551 --publish 80:80 --workers 3
+❯ k3d create --name dev --api-port 6551 --publish 80:80 --publish 443:443 --workers 3
 ```
 
 If everything has worked as intended you should see output like the following
@@ -135,7 +135,6 @@ spec:
 ```
 
 You can use the `kubectl explain` command to get an explaination of each of these fields, for example
-
 
 ```bash
 ❯ kubectl explain pod.spec.containers
@@ -732,7 +731,7 @@ Apply the manifest and then visit the application again. Select the "Server Env"
 
 Now that we have used *ConfigMaps* we will try the same with *Secrets*.
 
-Creating the file `7-secret.yaml` with the following content
+Create the file `7-secret.yaml` with the following content.
 
 ```yaml
 apiVersion: v1
@@ -760,7 +759,7 @@ NAME                         TYPE                                  DATA   AGE
 secret/kuard                 Opaque                                1      39s
 ```
 
-You will notice that there is a "TYPE" field, normally you won't need to worry about this, it is used for programmatic handling of the secret data and is normally only set when using the command line (explained below). 
+You will notice that there is a "TYPE" field, normally you won't need to worry about this, it is used for programmatic handling of the secret data and is normally only explicitly set when using the command line (explained below). 
 The `Opaque` *Secret* is the generic type for handling unstructured key/value pairs, there are a few other types you will encounter
 
 * `kubernetes.io/service-account-token` - Created by Kubernetes to hold the token for *ServiceAccounts*
@@ -769,9 +768,9 @@ The `Opaque` *Secret* is the generic type for handling unstructured key/value pa
 
 #### TLS Secret
 
-So that you see how they work we will see a TLS secret.
+So that you can see how they work we will create a TLS secret.
 
-First, we need to actually create the certificate. Use the `openssl` to generate a certificate/key pair, following the prompts, for now you can enter any values.
+First, we need to actually generate the certificate. Use `openssl` to generate a certificate/key pair, following the prompts, for now you can enter any values.
 
 ```bash
 openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout tls.key -out tls.cert
@@ -783,23 +782,23 @@ writing new private key to 'key.pem'
 ...
 ```
 
-Once finished you should have 2 files, `tls.key` which is the private key, and `tls.cert` which is the actually certificate.
+Once finished you should have 2 files, `tls.key` which is the private key, and `tls.cert` which is the actual certificate.
 
-Now, to apply create a Kubernetes secret you use the following command
+Now, to actually create a Kubernetes *Secret* you use the following command
 
 ```bash
 ❯ kubectl create secret tls kuard-tls --cert=tls.cert --key=tls.key
 secret/kuard-tls created
 ```
 
-You when then once more, see a new resource
+You will then once again see a new resource
 
 ```bash
 NAME                         TYPE                                  DATA   AGE
 secret/kuard-tls             kubernetes.io/tls                     2      24s
 ```
 
-If you get the *Secret* you will see it is essentially a secret with 2 key/value pairs with the content of the files base64 encoded (you will see different additional fields, such as `uid`).
+If you get the *Secret* you will see it is essentially a *Secret* with 2 key/value pairs with the content of the files base64 encoded (you will also see additional fields, such as `uid`).
 
 ```bash
 ❯ kubectl get secret kuard-tls -o yaml
@@ -814,7 +813,7 @@ data:
   tls.key: <DATA REDACTED FOR SPACE>
 ```
 
-The reason for the different `type` is so that applications such as [cert-manager](https://cert-manager.io) and the *Ingress Controller* know that the *Secret* contains a certificate so can use it. (Shortly we will update the *Ingress* to use a certifcate for HTTPS access).
+The reason for the different `type` is so that applications such as [cert-manager](https://cert-manager.io) and the *Ingress Controller* know that the *Secret* contains a certificate they can use. (Shortly we will update the *Ingress* to use a certificate for HTTPS access).
 
 #### Docker Credentials
 
@@ -844,7 +843,7 @@ FIELDS:
      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 ``` 
 
-To create a Docker secret simply run the following command.
+To create a Docker *Secret* simply run the following command.
 
 ```bash
 ❯ kubectl create secret docker-registry my-private-registry --docker-server=registry.example.com --docker-username=kubernetes --docker-password=password --docker-email=kubernetes@example.com
@@ -883,7 +882,7 @@ stringData:
   secret-password: my$uper$ecretP@ssw0rd
 ```
 
-When applying this file it will work in exactly the same way as the file with encoded data, however when you retrieve the file from the cluster you will always receive the encoded version. Note, if you supply both `data` and `stringData` only the latter is used.
+When applying this file it will work in exactly the same way as the file with encoded data, however when you retrieve the resource from the cluster you will always receive the encoded version. Note, if you supply both `data` and `stringData` only the latter is used.
 
 The second way is using `kubectl` in much the same way it can be used to create the Docker credentials
 
@@ -891,19 +890,19 @@ The second way is using `kubectl` in much the same way it can be used to create 
 ❯ kubectl create secret generic my-app-secret --from-literal=foo=bar
 ```
 
-This will create a *Secret* with 1 piece of data, the key `foo` with the value `bar`.
+This will create a *Secret* with 1 piece of data, the key `foo` with the value `bar`. You can supply `--from-literal` as many times as you need.
 
 #### Secrets from Files
 
 The security minded amongst you may have noticed a problem with the previous command (and the one for creating Docker credentials), running these commands will mean that your *Secret* values are now in your shell history.
 
-Thankfully `kubectl` instead provides a way to load the data from files instead, like the following
+Thankfully `kubectl` provides a way to load the data from files instead, like the following.
 
 ```bash
 ❯ kubectl create secret generic my-private-registry --from-file=.dockerconfigjson=~/.docker/config.json --type=kubernetes.io/dockerconfigjson`
 ```
 
-In the case of opaque *Secrets*, you simply don't set the `--type` parameter.
+Again the `--from-file` parameter can be provided as many times as needed; in the case of opaque *Secrets*, you simply don't set the `--type` parameter.
 
 ### Back to Using Secrets
 
