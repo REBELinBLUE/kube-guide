@@ -9,7 +9,7 @@ You also need to install [kubectl](https://kubernetes.io/docs/tasks/tools/instal
 k3d is a tool for running a virtual cluster in Docker, the first step is to bootstrap a cluster, for this we will create 3 workers and direct port `80` on the local machine to port `80` on the cluster.
 
 ```bash
-❯ k3d create --name dev2 --api-port 6551 --publish 80:80 --workers 3
+❯ k3d create --name dev --api-port 6551 --publish 80:80 --workers 3
 ```
 
 If everything has worked as intended you should see output like the following
