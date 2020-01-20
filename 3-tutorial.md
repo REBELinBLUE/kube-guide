@@ -876,10 +876,10 @@ this as `kubernetes.io/dockercfg` also).
 So that you can see how they work we will create a TLS secret.
 
 First, we need to actually generate the certificate. Use `openssl` to generate a certificate/key pair, following the 
-prompts, for now you can enter any values.
+prompts, enter any values you wish except for the "Common Name" where you should enter `kuard.cluster.local`.
 
 ```bash
-openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout tls.key -out tls.cert
+openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout tls.key -out tls.crt
 Generating a 2048 bit RSA private key
 ...............................................................................................................................................+++
 ............................+++
@@ -923,7 +923,7 @@ data:
 
 The reason for the different `type` is so that applications such as [cert-manager](https://cert-manager.io) and the 
 *Ingress Controller* know that the *Secret* contains a certificate they can use. (Shortly we will update the *Ingress* 
-to use a certificate for HTTPS access).
+to use the certificate for HTTPS access).
 
 #### Docker Credentials
 
@@ -1027,10 +1027,187 @@ don't set the `--type` parameter.
 
 Now we have discussed the different type of *Secrets* available, let's get back to actually making use of them...
 
+As *Secrets* work in exactly the same way as *ConfigMaps* we won't go through all the examples, but let's update the 
+*Deployment* to inject our *Secret* as an environment variable, we'll also load the *ConfigMap* as a directory
+for completeness sake.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuard
+spec:
+  selector:
+    matchLabels:
+      app: kuard
+  template:
+    metadata:
+      labels:
+        app: kuard
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kuard
+      containers:
+        - name: kuard
+          image: gcr.io/kuar-demo/kuard-amd64:purple
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+          env:
+            - name: A_SECRET_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kuard
+                  key: secret-password
+```
+
+Apply the *Manifest* and then visit the "Server Env" page again, you should see the *Secret* has been decoded from 
+base64 and injected into the container.
+
+![Server Env Variables - Showing Secret](./images/browser3.png)
+
+Now, change your browser so that you are using the address `https://kuard.cluster.local` instead. You should see a 
+warning that the certificate is not valid, this is because the default certificate is for `*.example.com` 
+(obviously in a production cluster you wouldn't have an invalid certificate as a fallback).
+
+![Certificate Error](./images/browser4.png)
+
+Now we will update the *Ingress* to use the certificate we previously created. To do this we add `spec.tls` to the 
+*Ingress*, this tells the *Ingress Controller* where it can find the certificate and which host it applies to
+(as you can have multiple hosts in the same *Ingress*).
+
+```yaml
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: kuard
+  labels:
+    app: kuard
+spec:
+  rules:
+    - host: kuard.cluster.local
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: kuard
+              servicePort: 8888
+  tls:
+    - hosts:
+        - kuard.cluster.local
+      secretName: kuard-tls
+```
+
+Apply the file and visit `https://kuard.cluster.local`. You will almost certainly get an error again, but if you view
+it you will see that the certificate belongs to "kuard.cluster.local"; the reason for the error is because we
+generated a self-signed certificate, when using certificates for real you will get a certificate from a trusted 
+certificate authority.
+
+This may sound like a lot of work, thankfully there are ways to automate this process, with the use of [cert-manager](https://cert-manager.io)
+certificates can automatically be requested from [Let's Encrypt](https://letsencrypt.org) simply by creating an
+*Ingress* with an *Annotation*.
+
+We haven't talked about *Annotations* yet, like *Labels*, they are for applying metadata to a resource, however they
+are meant for programmatic usage, where are *Labels* are for humans.
+
+```yaml
+❯ kubectl explain ingress.metadata.annotations
+KIND:     Ingress
+VERSION:  extensions/v1beta1
+
+FIELD:    annotations <map[string]string>
+
+DESCRIPTION:
+     Annotations is an unstructured key value map stored with a resource that
+     may be set by external tools to store and retrieve arbitrary metadata. They
+     are not queryable and should be preserved when modifying objects. More
+     info: http://kubernetes.io/docs/user-guide/annotations
+```
+
+Many applications use *Annotations* for configuration, if we had cert-manager installed it would just be a case of
+adding *Annotations* to the `metadata` of the *Ingress*, something like the following
+
+```yaml
+annotations:
+  cert-manager.io/cluster-issuer: letsencrypt-prod
+```
+
+cert-manager watches for certain *Annotations*, essentially using the same *Control Loop* mechanism we discussed in the 
+introduction, and then requests certificates based on the values of these *Annotations* (this one tells it the name of 
+the *ClusterIssuer* *CustomResourceDefinition* to use for requesting certificates); if you are interested you can 
+[read more about it in the documentation](https://cert-manager.io/docs/usage/ingress/#supported-annotations), but it is
+not required.
+
+Since we have HTTPS support we can stop visitors from accessing the application via HTTP (or redirect them),
+this is again where *Annotations* come in. You probably shouldn't do this right now (since we have a self signed
+certificate) but to do so we would add the following annotations the *Ingress* resource
+
+```yaml
+annotations:
+  kubernetes.io/ingress.class: traefik
+  traefik.ingress.kubernetes.io/frontend-entry-points: http,https
+  traefik.ingress.kubernetes.io/redirect-entry-point: https
+  traefik.ingress.kubernetes.io/redirect-permanent: "true"
+```
+
+The first field `kubernetes.io/ingress.class` is not strictly required, however it was previously mentioned that a 
+cluster can have multiple *Ingress Controllers* configured, so it is recommended that you always supply the 
+*Ingress Class* you wish to use.
+
+The remaining *Annotations* are Traefik specific values (hence the prefix `traefik.ingress.kubernetes.io`), telling the
+*Ingress Controller* to accept traffic on the HTTP and HTTPS port & to redirect all traffic to the HTTPS port using a
+HTTP 301 redirect. More about the *Annotations* can be found in the [Traefik documentation](https://docs.traefik.io/v1.7/configuration/backends/kubernetes/#annotations)
+but again it is not essentially to read now. If you wanted the traffic on every *Ingress* to always redirect to HTTPS 
+you could instead do so by editing the Traefik configuration, which is stored in a *ConfigMap* in the "kube-system"
+*Namespace*, but doing so is outside of the scope of this tutorial (just remember to restart Traefik's *Pods*).
+
+```bash
+❯ kubectl -n kube-system get configmap traefik -o yaml
+apiVersion: v1
+data:
+  traefik.toml: |
+    # traefik.toml
+    logLevel = "info"
+    defaultEntryPoints = ["http","https"]
+    ...
+```
+
+Note: It has not been mentioned before, but the `-n` parameter is how you run commands in different *Namespaces*, it
+is also possible to supply the *Namespace* on resource definitions alongside the name; you can also change `kubectl` so
+that the *Namespace* it uses if none is supplied is not "default".
+
+```bash
+❯ kubectl config set-context --current --namespace=my-awesome-namespace
+Context "dev" modified.
+```
+
 ## Persisting Data
 
 ## Maintaining Application and Cluster Health
 
+TODO: blue/green, readiness/liveness, node health
+
+## Summary
+
+By this point you should have an understanding of the following topics
+
+* Using `kubectl api-resources` and `kubectl explain` for documentation
+* Pods
+* Labels, Annotations, Taints & Toleration
+* Deployments and ReplicaSets
+* Ports and Services
+* Ingresses
+* Creating ConfigMaps & Secrets
+* Using ConfigMaps & Secrets as Volumes and Environment Variables
+* TLS Secrets & Using them with Ingresses
+
 ## Helm
 
 ## Further Reading
+
+* Kubectl cluster, context, credentials?
