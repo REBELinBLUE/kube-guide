@@ -10,7 +10,9 @@ Kubernetes resources are normally created in YAML files, called *Manifests* and 
 
 ## Basic Resources
 
-### Pod
+### Pod 
+
+![](./images/icons/resources/pod-128.png) 
 
 A *Pod* is the smallest unit in Kubernetes, it is a collection of Containers which run on a single *Node*. Containers within a *Pod* address each other via the normal loopback interface (localhost), however, containers do not share a filesystem so you need to use a *Volume* to share files between them, although this should be a very rare requirement. Along with containers, *Pods* can have *initContainers*, which are containers which run in sequence before starting the main containers, these can be used to bootstrap the *Pod*, for example by warming up a cache or retrieving data from a remote system.
 
@@ -20,6 +22,8 @@ Resource limitations can supplied on a per *Container* basis, and you can use th
 
 ### Namespace
 
+![](./images/icons/resources/ns-128.png)
+
 A *Namespace* is a logical grouping of resources, for example you may use *Namespaces* to group your resources by environment such as "prod", "staging" and "dev". By default that is all *Namespaces* are, there is nothing preventing your "dev" *Namespace* from communicating with your "prod" *Namespace* or consuming more resources; this is where you use *NetworkPolicy* resources to control whether *Pods* can communicate across namespaces (assuming you are using an appropriate CNI to enforce them) and *ResourceQuota* resources to enforce limits on the available compute resources (memory and cpu), storage resources and Kubernetes object count. A newly created cluster would have 3 *Namespaces* "default" (where resources are created if no *Namespace* is specified), "kube-public" and "kube-system" (where cluster processes, such as the *Scheduler*, *API Server* and the DNS server are placed).
 
 ## Applications
@@ -28,13 +32,19 @@ Kubernetes has several different ways to run your application, which one you use
 
 ### Deployment
 
+![](./images/icons/resources/deploy-128.png)
+
 The *Deployment* is a high level abstraction for defining and updating *Pods* and *ReplicaSets*. If you are running a stateless app which needs to run continously, such as a HTTP server, you will create a *Deployment*. *Deployments* allow you to update a running app without downtime, they also specify a strategy for restarting *Pods* if (or rather, when) they die. This is the type of resources you will normally create most often.
 
 ### ReplicaSet
 
+![](./images/icons/resources/rs-128.png)
+
 A *Deployment* will create a *ReplicaSet* which will ensure that your application has the desired number of *Pods*. A *ReplicaSet* will create and scale *Pods* to match the criteria defined, such as the number of replicas or the targets defined in a *HorizontalPodAutoscaler*. As with *Pods* you will not normally create a *ReplicaSet* directly, but will instead create them by defining a *Deployment*. If a *Pod* fails for whatever reason, it is the responsibility of the *ReplicaSet* to create a new one to replace it.
 
 ### StatefulSet
+
+![](./images/icons/resources/sts-128.png)
 
 Whilst you would normally be deploying stateless applications, there are times when you need state in your applications, this is what a *StatefulSet* is used for. Unlike *ReplicaSets* there is no high level abstraction so you would create the *StatefulSet* directly, like a *ReplicaSet* it is responsbile for creating *Pods* and scaling them. Unlike a *ReplicaSet* the *Pods* are not interchangeable, they are created in order and with predictable names, for example in a typical *ReplicaSet* you may end up with *Pods* called "myapp-589bd66f5-t7pr2" and "myapp-589bd66f5-r4kxr" (the first part "myapp-589bd66f5" matches the *ReplicaSet*), but when creating *StatefulSets* your *Pods* will be called "myapp-0", "myapp-1" etc which persists if a *Pod* dies and is rescheduled.
 
@@ -44,6 +54,8 @@ Data would be stored in a *PersistentVolume* (more on those later), however, unl
 
 ### DaemonSet
 
+![](./images/icons/resources/ds-128.png)
+
 DaemonSets are for *Pods* which should run on every *Node* (or every *Node* matching a specified criteria) instead of scaling to a number of replicas; when new *Nodes* are added to the cluster a new *Pod* from the *DaemonSet* would be scheduled on that *Node*. This is typically used for ongoing background processes such as monitoring and log collection.
 
 ## Configuration
@@ -51,6 +63,8 @@ DaemonSets are for *Pods* which should run on every *Node* (or every *Node* matc
 Configuration is not typically stored in your images, as this would tie them to a specific setup such as the environment, it would mean they need to be rebuilt to update the configuration and you probably don't want sensitive information such as database credentials stored in your image pipeline. To overcome this, Kubernetes provides a means to manage configuration and secret data.
 
 ### ConfigMap
+
+![](./images/icons/resources/cm-128.png)
 
 A *ConfigMap* is simply a collection of key-value pairs. They can be used in several different ways
 
@@ -62,6 +76,8 @@ A *ConfigMap* is simply a collection of key-value pairs. They can be used in sev
 Mounting/injecting the *ConfigMap* into containers is dealt with by *Kubelet*. When a *ConfigMap* is updated it is synced by *Kubelet* with any containers which are using it; however unless your application re-reads the files or variables it will not be aware of the new values, typically you would need to restart the *Pod* for this to occur but there are several tools available to allow this to happen automatically.
 
 ### Secret
+
+![](./images/icons/resources/secret-128.png)
 
 A *Secret* works in exactly the same way as a *ConfigMap*, the only difference is that it is meant for secret data such as passwords. However, they are not encrypted (although can be encrypted at rest), they are simply base64 encoded (this allows them to contain binary data). When the *Secret* is injected into a container it is decoded, they can be supplied to the container in exactly the same ways as *ConfigMaps*.
 
@@ -75,9 +91,13 @@ Along with the continously running processes managed by *ReplicaSets*, *Stateful
 
 ### Jobs
 
+![](./images/icons/resources/job-128.png)
+
 A *Job* is the means of running a batch process, it creates the *Pods* needed and tracks the successful executions, creating new *Pods* as needed until the desired completions are reached. Containers should not run indefinitely but should instead exit when they finish, either with the zero exit code on success or a non-zero code on failure; containers are not restarted automatically when they fail. A *Job* would be used for a batch process you wish to run on demand, for example to process a large set of data.
 
 ### Cronjobs
+
+![](./images/icons/resources/cronjob-128.png)
 
 The *Job* concept is extended by *CronJobs*, exactly like system cronjobs these are processes which run regularly, at a specified time. The schedule is defined in exactly the same format as the crontab schedule. The main difference is that a *Cronjob* will only run once at the scheduled time, rather than until a certain number of successful executions.
 
@@ -88,6 +108,8 @@ One pitfull of *Cronjobs* is that because of how they are scheduled you may not 
 ## Networking
 
 ### Service
+
+![](./images/icons/resources/svc-128.png)
 
 As *Pods* are ephermeral communicating directly with them can be troublesome as they can disappear at any time and be recreated with a new IP address. A *Service* provides a consistent single IP address for a set of *Pods*, provides port access and most importantly provides a consistent DNS name. This then allows both external users, and other *Pods* to communicate with them.
 
@@ -101,6 +123,8 @@ There are several types of *Services* available
 
 ### Ingress
 
+![](./images/icons/resources/ing-128.png)
+
 You may notice a problem with *Services*, to route external traffic you either need to use a different port for each of your applications, or have a seperate load balancer for each, which would be prohibitively expensive.
 
 This is where the *Ingress* resource comes in. The *Ingress* is backed by an *Ingress Controller*, which acts as a router to route requests to *Services* based on the "Host" header for the request; this means that *Ingress* resources are used for Layer 7 (HTTP) routing.
@@ -109,15 +133,21 @@ The *Ingress Controller* is backed by a *Service* with a *LoadBalancer* type, in
 
 ### Endpoints
 
+![](./images/icons/resources/ep-128.png)
+
 The *Endpoint* is a collection of addresses which implement the actual *Service*; you never need to interact with these directly as they are created automatically when a *Service* is created.
 
 ## Storage
 
 ### PersistentVolumeClaim
 
+![](./images/icons/resources/pvc-128.png)
+
 In Kubernetes, when you want some persistent storage, you create a *PersistentVolumeClaim*. This is a request for storage, similar to how *Pods* consume *Node* resources, *PersistentVolumeClaims* consume *PersistentVolume* resources; these allow the user to specify the type, size and access modes required. The claim is mounted as a *Volume* into a *Pod*.
 
 ### PersistentVolume
+
+![](./images/icons/resources/pv-128.png)
 
 While *PersistentVolumeClaims* define the resources required, they don't define where the storage actually is; this is what a *PersistentVolume* does. A *PersistentVolume* is normally created automatically when a *PersistentVolumeClaim* is mounted in a *Pod*, it will then dynamically provision the actual storage with your provider. However, if you already have the storage created it is possible to create a *PersistentVolume* manually, pointing at the physical storage and then claim it with the *PersistentVolumeClaim*.
 
@@ -125,11 +155,15 @@ While *PersistentVolumeClaims* define the resources required, they don't define 
 
 ### StorageClass
 
+![](./images/icons/resources/sc-128.png)
+
 A *StorageClass* allows a cluster administrator to define different types of storage, for instance NFS storage (with different classes for different servers) or cloud provider specific storage such as EFS. They define how dynamic provisioning works, which is handled by the underlying *Controller* depending on the type of storage.
 
 When defining a *PersistentVolumeClaim* you would specify which *StorageClass* to use, and if you do not specify one then the cluster default is used.
 
 ### Volumes
+
+![](./images/icons/resources/vol-128.png)
 
 A *Volume* is a component of a *Pod* rather than an independent resource. It is available to all containers within the *Pod* but each container must mount it, this means a single *Volume* could be mounted in different paths on several different containers within the *Pod*. You can use *Volumes* to share an empty directory between containers (which is destroyed when the *Pod* dies), but they are also used to mount *PersistentVolumes*, *ConfigMaps*, *Secrets* and even metadata about the *Pod* (using the *downwardAPI* type).
 
@@ -139,36 +173,58 @@ Then are many other resource types which you may hear talked about, along with t
 
 ### ServiceAccount
 
+![](./images/icons/resources/sa-128.png)
+
 Kubernetes distinguishes between the concept of a user account and a service account; a user account is for humans, *ServiceAccounts* are for processes which run in *Pods*. You can specify a *ServiceAccount* when defining a *Pod*, if you don't then the "default" *ServiceAccount* is used. The token for the *ServiceAccount* is automatically mounted to each container in a *Pod* so that the application can use it to authenticate with Kubernetes. They are scoped to a *Namespace*, where as user accounts are global. Normal users are not represented by Kubernetes resources, they are assumed to be managed by outside services; see the [documentation for more information](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes).
 
 ### Role / ClusterRole
+
+![](./images/icons/resources/role-128.png) ![](./images/icons/resources/c-role-128.png)
 
 *Roles* are scoped to a *Namespace*, where as *ClusterRoles* are cluster wide, they specify which resources can be accessed and what actions (verbs) can be performed.
 
 ### RoleBinding / ClusterRoleBinding
 
+![](./images/icons/resources/rb-128.png) ![](./images/icons/resources/crb-128.png)
+
 *RoleBindings* and *ClusterRoleBindings* bind *Roles* and *ClusterRoles* respectively to user accounts, user groups and *ServiceAccounts*.
 
 ### ResourceQuota
+
+![](./images/icons/resources/quota-128.png)
 
 *ResourceQuotas* set aggregate resource restrictions enforced on a per *Namespace* basis.
 
 ### LimitRange
 
+![](./images/icons/resources/limits-128.png)
+
 A *LimitRange* sets the resources limits for *Pods* and containers, if you create a *Pod* outside of the limits it will be rejected.
 
 ### HorizontalPodAutoscaler
+
+![](./images/icons/resources/hpa-128.png)
 
 The *HorizontalPodAutoscaler* defines rules for scaling the *Pods* in a *ReplicaSet* or *StatefulSet* based on CPU utilization and custom metrics.
 
 ### NetworkPolicy
 
+![](./images/icons/resources/netpol-128.png)
+
 By default, *Pods* are non-isolated and accept all traffic, this can be restricted by a *NetworkPolicy* which can be applied on a per *Pod* or a per *Namespace* basis.
 
 ### PodSecurityPolicy
+
+![](./images/icons/resources/psp-128.png)
 
 A *PodSecurityPolicy* is a cluster level resource which controls sensitive aspects of a *Pod* specification, such as which *Volume* types can be used, the users that containers can run as and which Linux capabilities can be used.
 
 ### PodDisruptionBudget
 
 The *PodDisruptionBudget* specifies the percentage of *Pod* replicas which can be unavailable, for example during a rolling update or when draining a *Node* (evicting all the *Pods*) so that it can be restarted to perform a OS update.
+
+### CustomResourceDefinition
+
+![](./images/icons/resources/crd-128.png)
+
+Applications can define their own resources by using a *CustomResourceDefintion* to create new resource types.

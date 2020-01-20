@@ -1,0 +1,1 @@
+The official Kubernetes icons, from https://github.com/kubernetes/community/tree/master/icons/png
