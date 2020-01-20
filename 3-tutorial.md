@@ -765,7 +765,7 @@ The `Opaque` *Secret* is the generic type for handling unstructured key/value pa
 
 * `kubernetes.io/service-account-token` - Created by Kubernetes to hold the token for *ServiceAccounts*
 * `kubernetes.io/tls` - Used to store certificates and their keys
-* `kubernetes.io/dockerconfigjson` - Used to store docker credentials for autheticating with registries (you may see this as `kubernetes.io/dockercfg` also).
+* `kubernetes.io/dockerconfigjson` - Used to store Docker credentials for authenticating with registries (you may see this as `kubernetes.io/dockercfg` also).
 
 #### TLS Secret
 
@@ -816,7 +816,7 @@ data:
 
 The reason for the different `type` is so that applications such as [cert-manager](https://cert-manager.io) and the *Ingress Controller* know that the *Secret* contains a certificate so can use it. (Shortly we will update the *Ingress* to use a certifcate for HTTPS access).
 
-#### Docker Configuration
+#### Docker Credentials
 
 The other type of *Secret* you may interact with is for storing Docker configuration, this is so that images can be pulled from private registries; you would supply the *Secret* name as the field `imagePullSecrets` on your *Pod* spec.
 
@@ -844,9 +844,9 @@ FIELDS:
      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 ``` 
 
-To create a Docker secret simply run the following command
+To create a Docker secret simply run the following command.
 
-```
+```bash
 ❯ kubectl create secret docker-registry my-private-registry --docker-server=registry.example.com --docker-username=kubernetes --docker-password=password --docker-email=kubernetes@example.com
 secret/my-private-registry created
 ```
@@ -867,11 +867,47 @@ data:
 
 #### Opaque Secrets
 
-The majority of the time you will be creating opaque secrets. You are probably thinking something along the lines of "What? Do I need to go the the effort of base64 encoding my values all the damn time?", luckily the answer is no.
+The majority of the time you will be creating opaque *Secrets*. You are probably thinking something along the lines of "What? Do I need to go the the effort of base64 encoding my values all the damn time?", luckily the answer is no.
 
 There are 2 ways to go about this, the first is with a YAML file (remember though, you probably don't want to commit your *Secrets* to a repository) and the second is with the command line.
 
-First, let's see how to do it with YAML files.  
+First, let's see how to do it with YAML files. Kubernetes allows you to supply the values unencoded, in a field named `stringData`.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-secret
+type: Opaque
+stringData:
+  secret-password: my$uper$ecretP@ssw0rd
+```
+
+When applying this file it will work in exactly the same way as the file with encoded data, however when you retrieve the file from the cluster you will always receive the encoded version. Note, if you supply both `data` and `stringData` only the latter is used.
+
+The second way is using `kubectl` in much the same way it can be used to create the Docker credentials
+
+```bash
+❯ kubectl create secret generic my-app-secret --from-literal=foo=bar
+```
+
+This will create a *Secret* with 1 piece of data, the key `foo` with the value `bar`.
+
+#### Secrets from Files
+
+The security minded amongst you may have noticed a problem with the previous command (and the one for creating Docker credentials), running these commands will mean that your *Secret* values are now in your shell history.
+
+Thankfully `kubectl` instead provides a way to load the data from files instead, like the following
+
+```bash
+❯ kubectl create secret generic my-private-registry --from-file=.dockerconfigjson=~/.docker/config.json --type=kubernetes.io/dockerconfigjson`
+```
+
+In the case of opaque *Secrets*, you simply don't set the `--type` parameter.
+
+### Back to Using Secrets
+
+Now we have discussed the different type of *Secrets* available, let's get back to actually making use of them...
 
 ## Persisting Data
 
