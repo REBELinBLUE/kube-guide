@@ -4,6 +4,8 @@ metadata:
   name: kuard
   labels:
     app: kuard
+  annotations:
+    kubernetes.io/ingress.class: traefik
 spec:
   rules:
     - host: kuard.cluster.local

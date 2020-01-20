@@ -582,6 +582,8 @@ metadata:
   name: kuard
   labels:
     app: kuard
+  annotations:
+    kubernetes.io/ingress.class: traefik
 spec:
   rules:
     - host: kuard.cluster.local
@@ -598,6 +600,11 @@ may be situations where you want different paths in an *Ingress* to be backed by
 different *Pods*); under the `path` we then specify which *Service* backs the *Ingress* and the port to map 
 to. The *Ingress Controller* runs on the usual HTTP and HTTPS ports; for HTTPS, SSL is (normally) terminated at 
 the *Ingress* and then communication with the *Pod* is via HTTP.
+
+You may notice a new field called `annotations`, don't worry about this for now, it will be explained later, just know
+that they are similar to *Labels* but used for configuration. The first field `kubernetes.io/ingress.class` is not 
+strictly required, however, as mentioned in the introduction, a cluster can have multiple *Ingress Controllers* 
+installed, so it is recommended that you always supply the name of the implementation you wish to use to prevent issues.
 
 Apply this file in the usual way and you will see that an *Ingress* is created.
 
@@ -1113,7 +1120,7 @@ certificates can automatically be requested from [Let's Encrypt](https://letsenc
 *Ingress* with an *Annotation*.
 
 We haven't talked about *Annotations* yet, like *Labels*, they are for applying metadata to a resource, however they
-are meant for programmatic usage, where are *Labels* are for humans.
+are meant for programmatic usage, where as *Labels* are for humans.
 
 ```yaml
 ❯ kubectl explain ingress.metadata.annotations
@@ -1129,7 +1136,7 @@ DESCRIPTION:
      info: http://kubernetes.io/docs/user-guide/annotations
 ```
 
-Many applications use *Annotations* for configuration, if we had cert-manager installed it would just be a case of
+Applications use *Annotations* for configuration, if we had cert-manager installed it would just be a case of
 adding *Annotations* to the `metadata` of the *Ingress*, something like the following
 
 ```yaml
@@ -1138,8 +1145,8 @@ annotations:
 ```
 
 cert-manager watches for certain *Annotations*, essentially using the same *Control Loop* mechanism we discussed in the 
-introduction, and then requests certificates based on the values of these *Annotations* (this one tells it the name of 
-the *ClusterIssuer* *CustomResourceDefinition* to use for requesting certificates); if you are interested you can 
+introduction, and then requests certificates based on their value (this one tells it the name of the *ClusterIssuer* 
+*CustomResourceDefinition* to use for requesting certificates); if you are interested you can 
 [read more about it in the documentation](https://cert-manager.io/docs/usage/ingress/#supported-annotations), but it is
 not required.
 
@@ -1149,17 +1156,12 @@ certificate) but to do so we would add the following annotations the *Ingress* r
 
 ```yaml
 annotations:
-  kubernetes.io/ingress.class: traefik
   traefik.ingress.kubernetes.io/frontend-entry-points: http,https
   traefik.ingress.kubernetes.io/redirect-entry-point: https
   traefik.ingress.kubernetes.io/redirect-permanent: "true"
 ```
 
-The first field `kubernetes.io/ingress.class` is not strictly required, however it was previously mentioned that a 
-cluster can have multiple *Ingress Controllers* configured, so it is recommended that you always supply the 
-*Ingress Class* you wish to use.
-
-The remaining *Annotations* are Traefik specific values (hence the prefix `traefik.ingress.kubernetes.io`), telling the
+These *Annotations* are Traefik specific values (hence the prefix `traefik.ingress.kubernetes.io`), telling the
 *Ingress Controller* to accept traffic on the HTTP and HTTPS port & to redirect all traffic to the HTTPS port using a
 HTTP 301 redirect. More about the *Annotations* can be found in the [Traefik documentation](https://docs.traefik.io/v1.7/configuration/backends/kubernetes/#annotations)
 but again it is not essentially to read now. If you wanted the traffic on every *Ingress* to always redirect to HTTPS 
