@@ -4,6 +4,8 @@ Now that you have an understanding of the core concepts it is time to try experi
 
 You also need to install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [k3d](https://github.com/rancher/k3d), if you are using a Mac both of these are available via [brew](https://brew.sh).
 
+Please ensure that you have a recent version of `kubectl`, the version installed by Docker desktop is not recent enough. This guide was written using version 1.17.1, use `kubectl version` to confirm the version which you have installed. 
+
 ## Cluster Setup
 
 k3d is a tool for running a virtual cluster in Docker, the first step is to bootstrap a cluster, for this we will create 3 workers and direct port `80` on the local machine to port `80` on the cluster.
@@ -39,7 +41,7 @@ You can also get the path to config file and merge it with `~/.kube/config`.
 ~/.config/k3d/dev/kubeconfig.yaml
 ```
 
-Note: If you want to destroy the cluster you can run the following command
+Note: If you want to destroy the cluster you can run the following command (you can also `stop` or `start` the cluster by replacing `del`)
 
 ```bash
 ❯ k3d del --name dev
