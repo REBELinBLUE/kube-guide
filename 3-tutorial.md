@@ -1,14 +1,19 @@
 # Tutorial
 
-Now that you have an understanding of the core concepts it is time to try experimenting; for this tutorial you require Docker installed.
+Now that you have an understanding of the core concepts it is time to try experimenting; for this tutorial you require 
+Docker installed.
 
-You also need to install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [k3d](https://github.com/rancher/k3d), if you are using a Mac both of these are available via [brew](https://brew.sh).
+You also need to install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and 
+[k3d](https://github.com/rancher/k3d), if you are using a Mac both of these are available via [brew](https://brew.sh).
 
-Please ensure that you have a recent version of `kubectl`, the version installed by Docker desktop is not recent enough. This guide was written using version 1.17.1, use `kubectl version` to confirm the version which you have installed. 
+Please ensure that you have a recent version of `kubectl`, the version installed by Docker desktop is not recent 
+enough. This guide was written using version 1.17.1, use `kubectl version` to confirm the version which you 
+have installed.
 
 ## Cluster Setup
 
-k3d is a tool for running a virtual cluster in Docker, the first step is to bootstrap a cluster, for this we will create 3 workers and direct port `80` on the local machine to port `80` on the cluster.
+k3d is a tool for running a virtual cluster in Docker, the first step is to bootstrap a cluster, for this we will 
+create 3 workers and direct port `80` on the local machine to port `80` on the cluster.
 
 ```bash
 ❯ k3d create --name dev --api-port 6551 --publish 80:80 --publish 443:443 --workers 3
@@ -41,13 +46,15 @@ You can also get the path to config file and merge it with `~/.kube/config`.
 ~/.config/k3d/dev/kubeconfig.yaml
 ```
 
-Note: If you want to destroy the cluster you can run the following command (you can also `stop` or `start` the cluster by replacing `del`)
+Note: If you want to destroy the cluster you can run the following command (you can also `stop` or `start` the cluster 
+by replacing `del`)
 
 ```bash
 ❯ k3d del --name dev
 ```
 
-Now you have created the cluster, ensure everything is working as intended by running `kubectl cluster-info`, you should see output like the following
+Now you have created the cluster, ensure everything is working as intended by running `kubectl cluster-info`, you 
+should see output like the following
 
 ```bash
 ❯ kubectl cluster-info
@@ -80,9 +87,17 @@ k3d-dev-worker-1   Ready    <none>   8m34s   v1.16.3-k3s.2
 k3d-dev-worker-2   Ready    <none>   8m34s   v1.16.3-k3s.2
 ```
 
-In a normal Kubernetes cluster *Pods* should not be scheduled on the master *Nodes*, however as k3d is a virtual cluster it is not set up like this. You can change this by applying a *taint* to the *Node*, *taints* are a way to tell the *Scheduler* not to schedule *Pods* on the *Node*. By default, master has a *taint*, however they can also be used for other things, for example if you have a *Node* with a special GPU or a slow hard drive you would apply a *taint* to prevent scheduling.
+In a normal Kubernetes cluster *Pods* should not be scheduled on the master *Nodes*, however as k3d is a virtual 
+cluster it is not set up like this. You can change this by applying a *taint* to the *Node*, *taints* are a way to 
+tell the *Scheduler* not to schedule *Pods* on the *Node*. By default, master has a *taint*, however they can also be 
+used for other things, for example if you have a *Node* with a special GPU or a slow hard drive you would apply a 
+*taint* to prevent scheduling.
 
-*Pods* can define *tolerations* to say that they are able to tolerate particular *taints*, such as a slow hard drive. However, having a *toleration* does not mean the *Pod* will be scheduled on the *Node*, just that it can be; if you want to ensure the *Pod* is scheduled on *Nodes* with particular *taints* you would use *nodeAffinity* (you can also use a *nodeSelector* but this simply allows you to specify that it must be scheduled on a *Node* with specified *Labels*, without enforcing that others *Pods* should not be).
+*Pods* can define *tolerations* to say that they are able to tolerate particular *taints*, such as a slow hard drive. 
+However, having a *toleration* does not mean the *Pod* will be scheduled on the *Node*, just that it can be; if you 
+want to ensure the *Pod* is scheduled on *Nodes* with particular *taints* you would use *nodeAffinity* (you can also 
+use a *nodeSelector* but this simply allows you to specify that it must be scheduled on a *Node* with specified 
+*Labels*, without enforcing that others *Pods* should not be).
 
 Now you have an understanding of *taints* and *tolerations* you should *taint* the master *Node*.
 
@@ -91,7 +106,11 @@ Now you have an understanding of *taints* and *tolerations* you should *taint* t
 node/k3d-dev-server tainted
 ```
 
-It is also useful to *Label* the workers so that they can be easily identified. *Labels* are pieces of metadata which can be applied to all resources as a means of describing them, for example you could use a "maintainer" *Label* to specify who maintains the resource, a "project" *Label* to specify which project the resources belong to or a "cost" *Label* to specify a cost center for reporting purposes. There are a set of [recommended labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/).
+It is also useful to *Label* the workers so that they can be easily identified. *Labels* are pieces of metadata which 
+can be applied to all resources as a means of describing them, for example you could use a "maintainer" *Label* to 
+specify who maintains the resource, a "project" *Label* to specify which project the resources belong to or a "cost"
+*Label* to specify a cost center for reporting purposes. There are a set of 
+[recommended labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/).
 
 Let's apply the "node-role.kubernetes.io" *Label* to the workers.
 
@@ -119,7 +138,8 @@ k3d-dev-worker-2   Ready    worker   22m   v1.16.3-k3s.2
 
 ## Creating a Pod
 
-Now that you have a running cluster, it is time to create a *Pod*. Thoughout this tutorial we will be using an application called [kuard](https://github.com/kubernetes-up-and-running/kuard) from the "Kubernetes Up and Running" book.
+Now that you have a running cluster, it is time to create a *Pod*. Throughout this tutorial we will be using an 
+application called [kuard](https://github.com/kubernetes-up-and-running/kuard) from the "Kubernetes Up and Running" book.
 
 Create the following file and save it as `1-pod.yaml`. This file contains the minimum fields required to create a *Pod*.
 
@@ -134,7 +154,7 @@ spec:
       image: gcr.io/kuar-demo/kuard-amd64:purple
 ```
 
-You can use the `kubectl explain` command to get an explaination of each of these fields, for example
+You can use the `kubectl explain` command to get an explanation of each of these fields, for example
 
 ```bash
 ❯ kubectl explain pod.spec.containers
@@ -154,7 +174,10 @@ FIELDS:
      ...
 ```
 
-Before going any further, you should open a new terminal (remember to run the `export` command detailed previously) and run the following command, which will get a list of the *Nodes* plus all other resources we will be creating in the "default" *Namespace* and will refresh every 2 seconds, keep this running whilst performing the other commands to see the operations happening.
+Before going any further, you should open a new terminal (remember to run the `export` command detailed previously) and 
+run the following command, which will get a list of the *Nodes* plus all other resources we will be creating in the 
+"default" *Namespace* and will refresh every 2 seconds, keep this running whilst performing the other commands to see 
+the operations happening.
 
 ```bash
 watch kubectl get nodes,pod,deploy,rs,svc,ing,cm,secret,pvc,pv -o wide
@@ -169,15 +192,16 @@ pod/kuard created
 
 in the other terminal the output should change to include something similar to the following
 
-
 ```bash
 NAME        READY   STATUS    RESTARTS   AGE     IP          NODE               NOMINATED NODE   READINESS GATES
 pod/kuard   1/1     Running   0          47s     10.42.1.4   k3d-dev-worker-0   <none>           <none>
 ```
 
-most of the fields here should be self explanatory, ignore the last 2 for now but the one which may not be obvious is the "READY" field, this is telling us that 1 container is running and there are a total of 1 containers defined in the *Pod*, you want both of these numbers to be the same.
+most of the fields here should be self explanatory, ignore the last 2 for now but the one which may not be obvious is 
+the "READY" field, this is telling us that 1 container is running and there are a total of 1 containers defined in 
+the *Pod*, you want both of these numbers to be the same.
 
-Now the *Pod* is running we can connect to it by running a shell interactively or we can run a command directly
+Now the *Pod* is running we can connect to it by running a shell interactively or we can run a command directly.
 
 ```bash
 # Start the sh shell
@@ -191,12 +215,13 @@ kuard
 
 We can now destroy the *Pod*, we do this by deleting the resource.
 
-```
+```bash
 ❯ kubectl delete pod/kuard
 pod "kuard" deleted
 ```
 
-If you watch the other terminal window you will notice that the *Pod* is not recreated, this shows that you can not use them on their own if you want your application to have redundancy.
+If you watch the other terminal window you will notice that the *Pod* is not recreated, this shows that you can not 
+use them on their own if you want your application to have redundancy.
 
 ## Creating a Deployment
 
@@ -223,11 +248,16 @@ spec:
           image: gcr.io/kuar-demo/kuard-amd64:purple
 ```
 
-As previous, you can use the `kubectl explain` command to get an explaination of each of these fields.
+As previous, you can use the `kubectl explain` command to get an explanation of each of these fields.
 
-The `metadata.labels` are not needed, but it is common practice to use the same *Labels* on all resources belonging to an application.
+The `metadata.labels` are not needed, but it is common practice to use the same *Labels* on all resources belonging 
+to an application.
 
-The important thing here is `spec.template`, this defines the *Pod* and is similar to the previous file, you will notice though that this time we have a `labels.app` field. There are 2 reasons for this, firstly any *Pods* created by the *Deployment* will not have a name you can specify (although the name is based on the *Deployment* name) so you can use the *Label* to query for *Pods* with the known value; secondly you'll use the same value in `spec.selector.matchLabels` so that the *ReplicaSet* which is created knows which *Pods* belong to it.
+The important thing here is `spec.template`, this defines the *Pod* and is similar to the previous file, you will
+notice though that this time we have a `labels.app` field. There are 2 reasons for this, firstly any *Pods* created 
+by the *Deployment* will not have a name you can specify (although the name is based on the *Deployment* name) so 
+you can use the *Label* to query for *Pods* with the known value; secondly you'll use the same value in 
+`spec.selector.matchLabels` so that the *ReplicaSet* which is created knows which *Pods* belong to it.
 
 Now apply the file
 
@@ -249,7 +279,8 @@ NAME                               DESIRED   CURRENT   READY   AGE   CONTAINERS 
 replicaset.apps/kuard-77d8b8d648   1         1         1       51s   kuard        gcr.io/kuar-demo/kuard-amd64:purple   app=kuard,pod-template-hash=77d8b8d648
 ```
 
-Now that everything is running, we can delete the *Pod* to show how it is automatically recreated, you can do this with the delete command previously detailed using the *Pod* name, but let's use the *Label* selector to do this instead
+Now that everything is running, we can delete the *Pod* to show how it is automatically recreated, you can do this 
+with the delete command previously detailed using the *Pod* name, but let's use the *Label* selector to do this instead
 
 ```bash
 ❯ kubectl delete pod -l app=kuard
@@ -271,23 +302,35 @@ NAME                         READY   STATUS    RESTARTS   AGE   IP          NODE
 pod/kuard-77d8b8d648-xtjn2   1/1     Running   0          57s   10.42.2.5   k3d-dev-worker-1   <none>           <none>
 ```
 
-You may notice that the "RESTARTS" field is still 0, so why is this? Because the *Pod* has not been restarted, but instead the *Pod* has been destroyed and a completely new one created; in the day to day running of the cluster, when the health checks are failing the *Pods* will instead be restarted.
+You may notice that the "RESTARTS" field is still 0, so why is this? Because the *Pod* has not been restarted, but 
+instead the *Pod* has been destroyed and a completely new one created; in the day to day running of the cluster, 
+when the health checks are failing the *Pods* will instead be restarted.
 
-Now let's see how the *ReplicaSets* work. Change the image tag from `purple` to `blue` and then apply the file again. Whilst you will see the same *Pod* behaviour as deleting a *Pod*, you will also see that there are now 2 *ReplicaSets*
+Now let's see how the *ReplicaSets* work. Change the image tag from `purple` to `blue` and then apply the file again.
+Whilst you will see the same *Pod* behaviour as deleting a *Pod*, you will also see that there are now 2 *ReplicaSets*
 
-```
+```bash
 NAME                               DESIRED   CURRENT   READY   AGE     CONTAINERS   IMAGES                                SELECTOR
 replicaset.apps/kuard-5b89578678   1         1         1       46s     kuard        gcr.io/kuar-demo/kuard-amd64:blue     app=kuard,pod-template-hash=5b89578678
 replicaset.apps/kuard-77d8b8d648   0         0         0       7m48s   kuard        gcr.io/kuar-demo/kuard-amd64:purple   app=kuard,pod-template-hash=77d8b8d648
 ```
 
-This is how Kubernetes performs zero downtime (also called blue/green or A/B) deployments. It creates a new *ReplicaSet*, launches a *Pod* for the new *ReplicaSet* whilst destroying a *Pod* in the old *ReplicaSet* and continues doing this until all *Pods* have been replaced. This is called the `RollingUpdate strategy`, if you instead wanted all *Pods* destroyed first you can set `spec.strategy.type` to `Recreate` on the *Deployment* but then you would not have zero downtime deployments.
+This is how Kubernetes performs zero downtime (also called blue/green or A/B) deployments. It creates a new 
+*ReplicaSet*, launches a *Pod* for the new *ReplicaSet* whilst destroying a *Pod* in the old *ReplicaSet* and 
+continues doing this until all *Pods* have been replaced. This is called the `RollingUpdate strategy`, if you 
+instead wanted all *Pods* destroyed first you can set `spec.strategy.type` to `Recreate` on the *Deployment* but then 
+you would not have zero downtime deployments.
 
-Old *ReplicaSets* are deleted based on the `spec.revisionHistoryLimit` field of the *Deployment*, which default is set to 10.
+Old *ReplicaSets* are deleted based on the `spec.revisionHistoryLimit` field of the *Deployment*, which default 
+is set to 10.
 
-Finally, let's clean up. You can delete the resources manually, but you would need to delete the *Deployment* otherwise the other restores will be recreated automatically (demostrating again that the cluster is self healing). Try deleting the *ReplicaSet* to see that is it recreated, along with a new *Pod*, this shows that the *Controllers* are working as previously described.
+Finally, let's clean up. You can delete the resources manually, but you would need to delete the *Deployment* otherwise 
+the other restores will be recreated automatically (demonstrating again that the cluster is self healing). Try deleting 
+the *ReplicaSet* to see that is it recreated, along with a new *Pod*, this shows that the *Controllers* are working 
+as previously described.
 
-Once you are finished, delete using the manifest file, this is normally a better idea as it means you don't accidentially leave any orphaned resources.
+Once you are finished, delete using the manifest file, this is normally a better idea as it means you don't 
+accidentally leave any orphaned resources.
 
 ```bash
 ❯ kubectl delete -f 2-deployment.yaml
@@ -326,7 +369,8 @@ spec:
               containerPort: 8080
 ```
 
-You will see that we have added the `ports` array to the definition, if you run the explain command you will see that this is purely informational.
+You will see that we have added the `ports` array to the definition, if you run the explain command you will see 
+that this is purely informational.
 
 ```bash
 ❯ kubectl explain deployment.spec.template.spec.containers.ports
@@ -346,9 +390,12 @@ DESCRIPTION:
      ContainerPort represents a network port in a single container.
 ```
 
-Ports are actually exposed when you build your image, using the `EXPOSE` directive. Although it is not required, it is recommended that you provide the port specification so that other users know which ports are being exposed and so that information can be discovered via the resource definition.
+Ports are actually exposed when you build your image, using the `EXPOSE` directive. Although it is not required, it 
+is recommended that you provide the port specification so that other users know which ports are being exposed and so 
+that information can be discovered via the resource definition.
 
-Containers within a *Pod* can communicate with each other via localhost, we will now add a second container to demostrate this.
+Containers within a *Pod* can communicate with each other via localhost, we will now add a second container to 
+demonstrate this.
 
 ```yaml
 apiVersion: apps/v1
@@ -381,7 +428,8 @@ spec:
               containerPort: 8080
 ```
 
-Now apply the file `kubectl apply -f 3-container-with-ports.yaml`. Once the *Pod* is running we can then run `curl` in the new container to demostrate that they can communicate
+Now apply the file `kubectl apply -f 3-container-with-ports.yaml`. Once the *Pod* is running we can then run `curl` in 
+the new container to demonstrate that they can communicate
 
 ```bash
 ❯ kubectl exec deploy/kuard -c curl curl http://localhost:8080/
@@ -398,7 +446,10 @@ Now apply the file `kubectl apply -f 3-container-with-ports.yaml`. Once the *Pod
   ...
 ```
 
-As you can see, the `curl` container (specified by the `-c curl` is able to communicate with the `kuard` container). You can now apply the previous version of the manifest to remove the extra container (you should do this otherwise the Pod will crash after 10 minutes as it is just running `sleep 600`; although you may want to change this value to a lower value such as 10 so that can observe as the container dies and the *Pod* is restarted).
+As you can see, the `curl` container (specified by the `-c curl` is able to communicate with the `kuard` container). 
+You can now apply the previous version of the manifest to remove the extra container (you should do this otherwise the 
+Pod will crash after 10 minutes as it is just running `sleep 600`; although you may want to change this value to a 
+lower value such as 10 so that can observe as the container dies and the *Pod* is restarted).
 
 Create a *Pod* for the `curl` container to show that other *Pods* are also able to communicate with it
 
@@ -420,7 +471,6 @@ spec:
 
 Get the IP of the `kuard` *Pod* and then run `curl` from the new `curl` *Pod*.
 
-
 ```bash
 ❯ POD_IP=$(kubectl get pods -l app=kuard -o jsonpath='{.items[0].status.podIP}')
 
@@ -440,13 +490,17 @@ Get the IP of the `kuard` *Pod* and then run `curl` from the new `curl` *Pod*.
 
 Delete the `curl` *Pod* once done with `kubectl delete pod/curl`.
 
-In the above command you may notice the `-o jsonpath='{.items[0].status.podIP}'` part, the API returns JSON so we can use JSONPath to get specific fields, as we are using a selector `-l app=kuard` rather than a specific *Pod* name it returns an array, hence the `items[0]`.
+In the above command you may notice the `-o jsonpath='{.items[0].status.podIP}'` part, the API returns JSON so we 
+can use JSONPath to get specific fields, as we are using a selector `-l app=kuard` rather than a specific *Pod* name 
+it returns an array, hence the `items[0]`.
 
 ### Services
 
-This is all well and good, but as you may have noticed, the IP address is not constant, if the *Pod* is destroyed the IP changes.
+This is all well and good, but as you may have noticed, the IP address is not constant, if the *Pod* is destroyed 
+the IP changes.
 
-This is where a *Service* comes in, it will give all the *Pods* in a *ReplicaSet* a single, constant IP address, and it will also give it an addressable name.
+This is where a *Service* comes in, it will give all the *Pods* in a *ReplicaSet* a single, constant IP address, 
+and it will also give it an addressable name.
 
 Create a file called `4-service.yaml` with the following content
 
@@ -466,8 +520,15 @@ spec:
     app: kuard
 ```
 
-In the *Service* definition you will notice a selector field which is the same as the `spec.selector.matchLabels` from the *Deployment*, this is so that the *Service* knows which *Pods* it should point to. We are using the `type` of `ClusterIP` here, we don't have a `LoadBalancer` so we can not use that, and, since the virtual cluster is running inside Docker we can't use `NodePort` without network changes.
-The `ports` indicate which `port` on the service (here `8888`) should map to which `targetPort` on the *Pods* (here it is mapped to the port named `http` but it is also possible to just use the number such as `8080`). If you are exposing more than 1 port in a *Service* then you must give each `port` a `name` field as well, otherwise it is optional.
+In the *Service* definition you will notice a selector field which is the same as the `spec.selector.matchLabels` from 
+the *Deployment*, this is so that the *Service* knows which *Pods* it should point to. We are using the `type` of 
+`ClusterIP` here, we don't have a `LoadBalancer` so we can not use that, and, since the virtual cluster is running 
+inside Docker we can't use `NodePort` without network changes.
+
+The `ports` indicate which `port` on the service (here `8888`) should map to which `targetPort` on the *Pods* (here 
+it is mapped to the port named `http` but it is also possible to just use the number such as `8080`). If you are 
+exposing more than 1 port in a *Service* then you must give each `port` a `name` field as well, otherwise 
+it is optional.
 
 Apply this file as normal `kubectl apply -f 4-service.yaml`.
 
@@ -478,7 +539,8 @@ NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   
 service/kuard        ClusterIP   10.43.133.122   <none>        8888/TCP   2s     app=kuard
 ```
 
-If you perform the previous `curl` tests you will see you can now communicate with the *Service* using the "CLUSTER-IP" on the `port`; more importantly, you will now have a DNS name for the service.
+If you perform the previous `curl` tests you will see you can now communicate with the *Service* using the 
+"CLUSTER-IP" on the `port`; more importantly, you will now have a DNS name for the service.
 
 ```bash
 ❯ kubectl exec pod/curl curl http://kuard:8888
@@ -495,9 +557,11 @@ If you perform the previous `curl` tests you will see you can now communicate wi
   ...
 ```
 
-You can delete the *Pod* which is backing the service and you will notice that the "CLUSTER-IP" of the *Service* does not change, and you can continue to address it with the same name once the new *Pod* is running.
+You can delete the *Pod* which is backing the service and you will notice that the "CLUSTER-IP" of the *Service* 
+does not change, and you can continue to address it with the same name once the new *Pod* is running.
 
-If we scale so that we have multiple `replicas` of the *Pod* you will notice that you are still able to communicate with the application after killing one of the *Pods* and before the new *Pod* has started.
+If we scale so that we have multiple `replicas` of the *Pod* you will notice that you are still able to communicate 
+with the application after killing one of the *Pods* and before the new *Pod* has started.
 
 ```bash
 ❯ kubectl scale deployment kuard --replicas=2
@@ -506,7 +570,8 @@ deployment.apps/kuard scaled
 
 ### Ingress
 
-Previously we mentioned that you need to provide your own *Ingress Controller*, thankfully k3s comes with Traefik already configured so now we can create an *Ingress* resource.
+Previously we mentioned that you need to provide your own *Ingress Controller*, thankfully k3s comes with Traefik 
+already configured so now we can create an *Ingress* resource.
 
 Create a file called `5-ingress.yaml` with the following content.
 
@@ -528,7 +593,11 @@ spec:
               servicePort: 8888
 ```
 
-The *Ingress* defines the `host`, along with `paths`, typically you would just be using a `path` of `/` but there may be situations where you want different paths in an *Ingress* to be backed by different *Services* (thus different *Pods*); under the `path` we then specify which *Service* backs the *Ingress* and the port to map to. The *Ingress Controller* runs on the usual HTTP and HTTPS ports; for HTTPS, SSL is (normally) terminated at the *Ingress* and then communication with the *Pod* is via HTTP.
+The *Ingress* defines the `host`, along with `paths`, typically you would just be using a `path` of `/` but there 
+may be situations where you want different paths in an *Ingress* to be backed by different *Services* (thus 
+different *Pods*); under the `path` we then specify which *Service* backs the *Ingress* and the port to map 
+to. The *Ingress Controller* runs on the usual HTTP and HTTPS ports; for HTTPS, SSL is (normally) terminated at 
+the *Ingress* and then communication with the *Pod* is via HTTP.
 
 Apply this file in the usual way and you will see that an *Ingress* is created.
 
@@ -537,7 +606,10 @@ NAME                       HOSTS                 ADDRESS      PORTS   AGE
 ingress.extensions/kuard   kuard.cluster.local   172.21.0.5   80      119s
 ```
 
-Now you can finally access your application outside of the cluster, but if you open your browser and visit `http://localhost` you will get a 404. So why? This is because the *Ingress* routes based on the host, we haven't defined an *Ingress* for `localhost`, you can change the host to `localhost` and re-apply the manifest, but instead let's use `curl` to prove this.
+Now you can finally access your application outside of the cluster, but if you open your browser and 
+visit `http://localhost` you will get a 404. So why? This is because the *Ingress* routes based on the host, we 
+haven't defined an *Ingress* for `localhost`, you can change the host to `localhost` and re-apply the manifest, but 
+instead let's use `curl` to prove this.
 
 ```bash
 ❯ curl -H "Host: kuard.cluster.local" http://localhost
@@ -551,7 +623,8 @@ Now you can finally access your application outside of the cluster, but if you o
   ...
 ```
 
-As you can see we now get the response we expect, so to get it working correctly in your browser, add the hostname to `/etc/hosts`. If you visit `http://kuard.cluster.local` in your browser you will then see the application.
+As you can see we now get the response we expect, so to get it working correctly in your browser, add the hostname 
+to `/etc/hosts`. If you visit `http://kuard.cluster.local` in your browser you will then see the application.
 
 ![KUARD](./images/browser.png)
 
@@ -559,7 +632,8 @@ We now have a fully working application!
 
 ## Injecting Configuration
 
-Now that we have created a fully running application we will create a *ConfigMap* and some *Secrets* to demonstrate how these are consumed.
+Now that we have created a fully running application we will create a *ConfigMap* and some *Secrets* to demonstrate 
+how these are consumed.
 
 ### Using ConfigMaps
 
@@ -636,19 +710,40 @@ spec:
               subPath: kuard.json
 ```
 
-There are several new things here, firstly you will notice `spec.template.spec.volumes` which is an array of *Volumes* which will be available for the containers to mount. The `name` field is compulsory but after that the remaining fields depend on the type of *Volume*. If you use the `kubectl explain` command you will notice that there are a lot of different options, here we are using the `configMap`; other common options include `secret`, `persistentVolumeClaim`, `emptyDir`, `hostPath` (for mounting a path from the physical host) and even `downwardAPI` (for mounting a file containing metadata about the *Pod*), there is also `projected` type for [mounting different sources into the same directory](https://kubernetes.io/docs/tasks/configure-pod-container/configure-projected-volume-storage/).
+There are several new things here, firstly you will notice `spec.template.spec.volumes` which is an array of *Volumes* 
+which will be available for the containers to mount. The `name` field is compulsory but after that the remaining 
+fields depend on the type of *Volume*. If you use the `kubectl explain` command you will notice that there are a lot 
+of different options, here we are using the `configMap`; other common options include `secret`, 
+`persistentVolumeClaim`, `emptyDir`, `hostPath` (for mounting a path from the physical host) and even 
+`downwardAPI` (for mounting a file containing metadata about the *Pod*), there is also `projected` type 
+for [mounting different sources into the same directory](https://kubernetes.io/docs/tasks/configure-pod-container/configure-projected-volume-storage/).
 
-Defining the *Volume* is not enough, you then need to define where it should be mounted; much like on your computer when you add a new drive, it needs to be configured where it should be mounted (although this probably happens automatically).
+Defining the *Volume* is not enough, you then need to define where it should be mounted; much like on your computer 
+when you add a new drive, it needs to be configured where it should be mounted (although this probably happens 
+automatically).
 
-The *Volumes* are mounted into each container which requires them, rather than simply into all containers. To do this we define an array of `VolumeMounts` on the container, each mount includes the `name` of the *Volume* we are mounting and the `mountPath` to use.
+The *Volumes* are mounted into each container which requires them, rather than simply into all containers. To do 
+this we define an array of `VolumeMounts` on the container, each mount includes the `name` of the *Volume* we are 
+mounting and the `mountPath` to use.
 
-You may notice that we are mounting the *Volume* twice in this example. First with the `mountPath` set to `/config`, this will mount the entire *ConfigMap* as a directory, which each key representing a file, and secondly we are mounting with `/app/config.json` to represent a single file, here we have a `subPath` parameter which specifies which key from the *ConfigMap* to use.
+You may notice that we are mounting the *Volume* twice in this example. First with the `mountPath` set to `/config`, 
+this will mount the entire *ConfigMap* as a directory, which each key representing a file, and secondly we are mounting 
+with `/app/config.json` to represent a single file, here we have a `subPath` parameter which specifies which key from 
+the *ConfigMap* to use.
 
-Apply the manifest for the *Deployment* and we will see the result. Visit the application in your browser again and select the "File System Browser" on the left hand side. You will see a listing with the content of the container's file system, and if you browse around you will discovert the 2 `volumeMounts` we created, firstly the directly `/config` containing all the files and secondly `/app/config.json` specifically being one of the keys. **WARNING** If you mount a volume to a directory `path` any existing files in that directory will be removed.
+Apply the manifest for the *Deployment* and we will see the result. Visit the application in your browser again and 
+select the "File System Browser" on the left hand side. You will see a listing with the content of the container's 
+file system, and if you browse around you will discovert the 2 `volumeMounts` we created, firstly the 
+directly `/config` containing all the files and secondly `/app/config.json` specifically being one of the keys. 
+**WARNING** If you mount a volume to a directory `path` any existing files in that directory will be removed.
 
-We previously talked about how the mounted *ConfigMap* is updated in the container if you change it, but there is a pitfull.
+We previously talked about how the mounted *ConfigMap* is updated in the container if you change it, but there 
+is a pitfall...
 
-Edit the `kuard.json` key in the *ConfigMap* and apply it again. After a few seconds, if you use the "File System Browser" to view the `/config/kuard.json` file you will see that it has been updated, however if you view the `/app/config.json` file it [still has the old value](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically); this is an important distinction to be aware of.
+Edit the `kuard.json` key in the *ConfigMap* and apply it again. After a few seconds, if you use the 
+"File System Browser" to view the `/config/kuard.json` file you will see that it has been updated, 
+however if you view the `/app/config.json` file it [still has the old value](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically)
+; this is an important distinction to be aware of.
 
 Next, let's try using the *ConfigMap* to populate environment variables, update the manifest like the following.
 
@@ -685,8 +780,9 @@ spec:
             - "$(A_SUPER_SECRET_TOKEN)"
 ```
 
-The `volumes` and `volumeMounts` keys have been been removed as we are no longer using the *ConfigMap* as a *Volume*, instead you can see that we have added a new `env` section to the container. As always, you can use the `kubectl explain` command, but the interesting field here is `valueFrom`.
-
+The `volumes` and `volumeMounts` keys have been been removed as we are no longer using the *ConfigMap* as a *Volume*, 
+instead you can see that we have added a new `env` section to the container. As always, you can use the 
+`kubectl explain` command, but the interesting field here is `valueFrom`.
 
 ```bash
 ❯ kubectl explain deployment.spec.template.spec.containers.env.valueFrom
@@ -702,28 +798,34 @@ DESCRIPTION:
      EnvVarSource represents a source for the value of an EnvVar.
 
 FIELDS:
-   configMapKeyRef	<Object>
+   configMapKeyRef <Object>
      Selects a key of a ConfigMap.
 
-   fieldRef	<Object>
+   fieldRef <Object>
      Selects a field of the pod: supports metadata.name, metadata.namespace,
      metadata.labels, metadata.annotations, spec.nodeName,
      spec.serviceAccountName, status.hostIP, status.podIP.
 
-   resourceFieldRef	<Object>
+   resourceFieldRef <Object>
      Selects a resource of the container: only resources limits and requests
      (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu,
      requests.memory and requests.ephemeral-storage) are currently supported.
 
-   secretKeyRef	<Object>
+   secretKeyRef <Object>
      Selects a key of a secret in the pod's namespace
 ```
 
-As you can see, this tells us that we can populate environment variables from *ConfigMaps* and *Secrets*, but we can also populate them from fields from the *Pod* and from the resource limits. Here we are using the `configMapKeyRef` option. We then provide the `name` of the *ConfigMap* to use and the `key` from it; this will result in an environment variable named `A_SUPER_SECRET_TOKEN` being injected into the container.
+As you can see, this tells us that we can populate environment variables from *ConfigMaps* and *Secrets*, but we can 
+also populate them from fields from the *Pod* and from the resource limits. Here we are using the `configMapKeyRef` 
+option. We then provide the `name` of the *ConfigMap* to use and the `key` from it; this will result in an environment 
+variable named `A_SUPER_SECRET_TOKEN` being injected into the container.
 
-Finally we have supplied `command`, this allows us to overwrite the command from the Docker image, it has been provided here to show that you can use the environment variables.
+Finally we have supplied `command`, this allows us to overwrite the command from the Docker image, it has been provided 
+here to show that you can use the environment variables.
 
-Apply the manifest and then visit the application again. Select the "Server Env" option and you will see all the environment variables which exist, you should see `A_SUPER_SECRET_TOKEN`; and at the top of the page you will see the command which was used to launch the process, the variable has been replaced with it's value.
+Apply the manifest and then visit the application again. Select the "Server Env" option and you will see all the 
+environment variables which exist, you should see `A_SUPER_SECRET_TOKEN`; and at the top of the page you will see the 
+command which was used to launch the process, the variable has been replaced with it's value.
 
 ![Server Env Variables](./images/browser2.png)
 
@@ -759,18 +861,22 @@ NAME                         TYPE                                  DATA   AGE
 secret/kuard                 Opaque                                1      39s
 ```
 
-You will notice that there is a "TYPE" field, normally you won't need to worry about this, it is used for programmatic handling of the secret data and is normally only explicitly set when using the command line (explained below). 
-The `Opaque` *Secret* is the generic type for handling unstructured key/value pairs, there are a few other types you will encounter
+You will notice that there is a "TYPE" field, normally you won't need to worry about this, it is used for programmatic 
+handling of the secret data and is normally only explicitly set when using the command line (explained below).
+The `Opaque` *Secret* is the generic type for handling unstructured key/value pairs, there are a few other types you 
+will encounter
 
 * `kubernetes.io/service-account-token` - Created by Kubernetes to hold the token for *ServiceAccounts*
 * `kubernetes.io/tls` - Used to store certificates and their keys
-* `kubernetes.io/dockerconfigjson` - Used to store Docker credentials for authenticating with registries (you may see this as `kubernetes.io/dockercfg` also).
+* `kubernetes.io/dockerconfigjson` - Used to store Docker credentials for authenticating with registries (you may see 
+this as `kubernetes.io/dockercfg` also).
 
 #### TLS Secret
 
 So that you can see how they work we will create a TLS secret.
 
-First, we need to actually generate the certificate. Use `openssl` to generate a certificate/key pair, following the prompts, for now you can enter any values.
+First, we need to actually generate the certificate. Use `openssl` to generate a certificate/key pair, following the 
+prompts, for now you can enter any values.
 
 ```bash
 openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout tls.key -out tls.cert
@@ -782,7 +888,8 @@ writing new private key to 'key.pem'
 ...
 ```
 
-Once finished you should have 2 files, `tls.key` which is the private key, and `tls.cert` which is the actual certificate.
+Once finished you should have 2 files, `tls.key` which is the private key, and `tls.cert` which is the actual 
+certificate.
 
 Now, to actually create a Kubernetes *Secret* you use the following command
 
@@ -798,7 +905,8 @@ NAME                         TYPE                                  DATA   AGE
 secret/kuard-tls             kubernetes.io/tls                     2      24s
 ```
 
-If you get the *Secret* you will see it is essentially a *Secret* with 2 key/value pairs with the content of the files base64 encoded (you will also see additional fields, such as `uid`).
+If you get the *Secret* you will see it is essentially a *Secret* with 2 key/value pairs with the content of the files 
+base64 encoded (you will also see additional fields, such as `uid`).
 
 ```bash
 ❯ kubectl get secret kuard-tls -o yaml
@@ -813,11 +921,14 @@ data:
   tls.key: <DATA REDACTED FOR SPACE>
 ```
 
-The reason for the different `type` is so that applications such as [cert-manager](https://cert-manager.io) and the *Ingress Controller* know that the *Secret* contains a certificate they can use. (Shortly we will update the *Ingress* to use a certificate for HTTPS access).
+The reason for the different `type` is so that applications such as [cert-manager](https://cert-manager.io) and the 
+*Ingress Controller* know that the *Secret* contains a certificate they can use. (Shortly we will update the *Ingress* 
+to use a certificate for HTTPS access).
 
 #### Docker Credentials
 
-The other type of *Secret* you may interact with is for storing Docker configuration, this is so that images can be pulled from private registries; you would supply the *Secret* name as the field `imagePullSecrets` on your *Pod* spec.
+The other type of *Secret* you may interact with is for storing Docker configuration, this is so that images can be 
+pulled from private registries; you would supply the *Secret* name as the field `imagePullSecrets` on your *Pod* spec.
 
 ```bash
 ❯ kubectl explain pod.spec.imagePullSecrets
@@ -838,10 +949,10 @@ DESCRIPTION:
      referenced object inside the same namespace.
 
 FIELDS:
-   name	<string>
+   name <string>
      Name of the referent. More info:
      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-``` 
+```
 
 To create a Docker *Secret* simply run the following command.
 
@@ -866,11 +977,14 @@ data:
 
 #### Opaque Secrets
 
-The majority of the time you will be creating opaque *Secrets*. You are probably thinking something along the lines of "What? Do I need to go the the effort of base64 encoding my values all the damn time?", luckily the answer is no.
+The majority of the time you will be creating opaque *Secrets*. You are probably thinking something along the lines of 
+"What? Do I need to go the the effort of base64 encoding my values all the damn time?", luckily the answer is no.
 
-There are 2 ways to go about this, the first is with a YAML file (remember though, you probably don't want to commit your *Secrets* to a repository) and the second is with the command line.
+There are 2 ways to go about this, the first is with a YAML file (remember though, you probably don't want to commit 
+your *Secrets* to a repository) and the second is with the command line.
 
-First, let's see how to do it with YAML files. Kubernetes allows you to supply the values unencoded, in a field named `stringData`.
+First, let's see how to do it with YAML files. Kubernetes allows you to supply the values unencoded, in a field 
+named `stringData`.
 
 ```yaml
 apiVersion: v1
@@ -882,7 +996,9 @@ stringData:
   secret-password: my$uper$ecretP@ssw0rd
 ```
 
-When applying this file it will work in exactly the same way as the file with encoded data, however when you retrieve the resource from the cluster you will always receive the encoded version. Note, if you supply both `data` and `stringData` only the latter is used.
+When applying this file it will work in exactly the same way as the file with encoded data, however when you retrieve 
+the resource from the cluster you will always receive the encoded version. Note, if you supply both `data` and 
+`stringData` only the latter is used.
 
 The second way is using `kubectl` in much the same way it can be used to create the Docker credentials
 
@@ -890,11 +1006,13 @@ The second way is using `kubectl` in much the same way it can be used to create 
 ❯ kubectl create secret generic my-app-secret --from-literal=foo=bar
 ```
 
-This will create a *Secret* with 1 piece of data, the key `foo` with the value `bar`. You can supply `--from-literal` as many times as you need.
+This will create a *Secret* with 1 piece of data, the key `foo` with the value `bar`. You can supply `--from-literal` 
+as many times as you need.
 
 #### Secrets from Files
 
-The security minded amongst you may have noticed a problem with the previous command (and the one for creating Docker credentials), running these commands will mean that your *Secret* values are now in your shell history.
+The security minded amongst you may have noticed a problem with the previous command (and the one for creating Docker 
+credentials), running these commands will mean that your *Secret* values are now in your shell history.
 
 Thankfully `kubectl` provides a way to load the data from files instead, like the following.
 
@@ -902,7 +1020,8 @@ Thankfully `kubectl` provides a way to load the data from files instead, like th
 ❯ kubectl create secret generic my-private-registry --from-file=.dockerconfigjson=~/.docker/config.json --type=kubernetes.io/dockerconfigjson`
 ```
 
-Again the `--from-file` parameter can be provided as many times as needed; in the case of opaque *Secrets*, you simply don't set the `--type` parameter.
+Again the `--from-file` parameter can be provided as many times as needed; in the case of opaque *Secrets*, you simply 
+don't set the `--type` parameter.
 
 ### Back to Using Secrets
 

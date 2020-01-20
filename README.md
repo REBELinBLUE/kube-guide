@@ -4,7 +4,6 @@
 * [Resource Types](./2-resources.md)
 * [Tutorial](./3-tutorial.md)
 
-
 ## Other Useful Resources
 
 * [Kubernetes the Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way) - A tutorial from Kelsey Hightower on bootstraping a cluster completely from scratch without any scripts, very useful if you want to learn exactly how everything fits together.
