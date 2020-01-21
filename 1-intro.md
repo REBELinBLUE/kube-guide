@@ -10,6 +10,26 @@ take care of provisioning hardware, allowing you to use all available hardware r
 computer. By specifying the resources required by your application Kubernetes will take care of scheduling them to run
 on hardware with the appropriate resources available.
 
+## Table of Contents
+- [Why use Kubernetes](#why-use-kubernetes)
+- [Components of Kubernetes](#components-of-kubernetes)
+  * [Control Plane (or Master Node)](#control-plane-or-master-node)
+    + [etcd](#etcd)
+    + [API Server](#api-server)
+    + [Scheduler](#scheduler)
+    + [Kube-Controller Manager](#kube-controller-manager)
+    + [Cloud-Controller Manager](#cloud-controller-manager)
+  * [Worker Node](#worker-node)
+    + [Kubelet](#kubelet)
+    + [Kube-proxy](#kube-proxy)
+  * [Addons](#addons)
+    + [Container Network Interface](#container-network-interface)
+    + [DNS](#dns)
+    + [Ingress Controller](#ingress-controller)
+    + [UI](#ui)
+    + [Logging](#logging)
+    + [Monitoring](#monitoring)
+
 ## Why use Kubernetes
 
 TODO

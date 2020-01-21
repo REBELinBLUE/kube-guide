@@ -19,6 +19,45 @@ with a specific scope.
 Kubernetes resources are normally created in YAML files, called *Manifests* and then applied to the cluster 
 using `kubectl apply -f myapp.yaml`.
 
+## Table of Contents
+
+- [Basic Resources](#basic-resources)
+  * [Pod](#pod)
+  * [Namespace](#namespace)
+- [Applications](#applications)
+  * [Deployment](#deployment)
+  * [ReplicaSet](#replicaset)
+  * [StatefulSet](#statefulset)
+  * [DaemonSet](#daemonset)
+- [Configuration](#configuration)
+  * [ConfigMap](#configmap)
+  * [Secret](#secret)
+- [Batch Processes](#batch-processes)
+  * [Jobs](#jobs)
+  * [Cronjobs](#cronjobs)
+- [Networking](#networking)
+  * [Service](#service)
+  * [Ingress](#ingress)
+  * [Endpoints](#endpoints)
+- [Storage](#storage)
+  * [PersistentVolumeClaim](#persistentvolumeclaim)
+  * [PersistentVolume](#persistentvolume)
+  * [StorageClass](#storageclass)
+  * [Volumes](#volumes)
+- [Other Resources](#other-resources)
+  * [ServiceAccount](#serviceaccount)
+  * [Role](#role)
+  * [ClusterRole](#clusterrole)
+  * [RoleBinding](#rolebinding)
+  * [ClusterRoleBinding](#clusterrolebinding)
+  * [CustomResourceDefinition](#customresourcedefinition)
+  * [ResourceQuota](#resourcequota)
+  * [LimitRange](#limitrange)
+  * [HorizontalPodAutoscaler](#horizontalpodautoscaler)
+  * [NetworkPolicy](#networkpolicy)
+  * [PodSecurityPolicy](#podsecuritypolicy)
+  * [PodDisruptionBudget](#poddisruptionbudget)
+
 ## Basic Resources
 
 ### Pod

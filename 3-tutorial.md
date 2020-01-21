@@ -14,6 +14,30 @@ have installed.
 > references the resource it is pointing to, where as a dotted line indicates that it creates the other resource. Each 
 > namespace has a "default" *ServiceAccount* with a *Secret*, this will be left out of the diagrams until it is used.
 
+## Table of Contents
+
+- [Table of Content](#table-of-content)
+- [Cluster Setup](#cluster-setup)
+- [Creating a Pod](#creating-a-pod)
+- [Creating a Deployment](#creating-a-deployment)
+- [Making Your Deployment Accessible](#making-your-deployment-accessible)
+  * [Exposing Ports](#exposing-ports)
+  * [Services](#services)
+  * [Ingress](#ingress)
+- [Injecting Configuration](#injecting-configuration)
+  * [Using ConfigMaps](#using-configmaps)
+  * [Using Secrets](#using-secrets)
+    + [TLS Secret](#tls-secret)
+    + [Docker Credentials](#docker-credentials)
+    + [Opaque Secrets](#opaque-secrets)
+    + [Secrets from Files](#secrets-from-files)
+  * [Back to Using Secrets](#back-to-using-secrets)
+- [Persisting Data](#persisting-data)
+- [Maintaining Application and Cluster Health](#maintaining-application-and-cluster-health)
+- [Summary](#summary)
+- [Helm](#helm)
+- [Further Reading](#further-reading)
+  
 ## Cluster Setup
 
 k3d is a tool for running a virtual cluster in Docker, the first step is to bootstrap a cluster, for this we will 
