@@ -10,6 +10,10 @@ Please ensure that you have a recent version of `kubectl`, the version installed
 enough. This guide was written using version 1.17.1, use `kubectl version` to confirm the version which you 
 have installed.
 
+> Throughout this tutorial you will find diagrams of the state of the cluster, a solid line indicates that the resource
+> references the resource it is pointing to, where as a dotted line indicates that it creates the other resource. Each 
+> namespace has a "default" *ServiceAccount* with a *Secret*, this will be left out of the diagrams until it is used.
+
 ## Cluster Setup
 
 k3d is a tool for running a virtual cluster in Docker, the first step is to bootstrap a cluster, for this we will 
@@ -213,6 +217,10 @@ Now the *Pod* is running we can connect to it by running a shell interactively o
 kuard
 ```
 
+At this stage the state of our cluster looks similar to this.
+
+![Namespace with Single Pod](./images/figure1.png)
+
 We can now destroy the *Pod*, we do this by deleting the resource.
 
 ```bash
@@ -306,6 +314,10 @@ You may notice that the "RESTARTS" field is still 0, so why is this? Because the
 instead the *Pod* has been destroyed and a completely new one created; in the day to day running of the cluster, 
 when the health checks are failing the *Pods* will instead be restarted.
 
+The cluster now looks like the following.
+
+![Deployment](./images/figure2.png)
+
 Now let's see how the *ReplicaSets* work. Change the image tag from `purple` to `blue` and then apply the file again.
 Whilst you will see the same *Pod* behaviour as deleting a *Pod*, you will also see that there are now 2 *ReplicaSets*
 
@@ -328,6 +340,11 @@ Finally, let's clean up. You can delete the resources manually, but you would ne
 the other restores will be recreated automatically (demonstrating again that the cluster is self healing). Try deleting 
 the *ReplicaSet* to see that is it recreated, along with a new *Pod*, this shows that the *Controllers* are working 
 as previously described.
+
+The cluster will now looks like the following. (Note: After this point the old *ReplicaSets* won't be included in 
+these diagrams).
+
+![Deployment with 2 ReplicaSets](./images/figure3.png)
 
 Once you are finished, delete using the manifest file, this is normally a better idea as it means you don't 
 accidentally leave any orphaned resources.
@@ -560,13 +577,54 @@ If you perform the previous `curl` tests you will see you can now communicate wi
 You can delete the *Pod* which is backing the service and you will notice that the "CLUSTER-IP" of the *Service* 
 does not change, and you can continue to address it with the same name once the new *Pod* is running.
 
-If we scale so that we have multiple `replicas` of the *Pod* you will notice that you are still able to communicate 
-with the application after killing one of the *Pods* and before the new *Pod* has started.
+The cluster now looks like this.
+
+![Service](./images/figure4.png)
+
+You may notice the *Endpoint*, just like *Deployments* create *ReplicaSets* which point at the specific *Pods*, 
+*Services* as backed by *Endpoints* which point to the *Pods*. You can see how this looks (bare in mind your output
+will differ).
+
+```bash
+❯ kubectl get endpoints kuard -o yaml
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: kuard
+  namespace: default
+  labels:
+    app: kuard
+subsets:
+  - addresses:
+    - ip: 10.42.1.7
+      nodeName: k3d-dev-worker-1
+      targetRef:
+        kind: Pod
+        name: kuard-6c7b4f7bf-wrlgw
+        namespace: default
+    - ip: 10.42.3.7
+      nodeName: k3d-dev-worker-0
+      targetRef:
+        kind: Pod
+        name: kuard-6c7b4f7bf-56qfp
+        namespace: default
+    ports:
+      - port: 8080
+        protocol: TCP
+```
+
+Now, let's scale so that we have multiple `replicas` of the *Pod*. You will notice that you are still able to 
+communicate with the application after killing one of the *Pods* and before the new *Pod* has started.
 
 ```bash
 ❯ kubectl scale deployment kuard --replicas=2
 deployment.apps/kuard scaled
 ```
+
+After scaling the replicas the cluster looks like this (Again, from this point only 1 *Pod* will be shown to represent
+all *Pods* in a *ReplicaSet*).
+
+![Service](./images/figure5.png)
 
 ### Ingress
 
@@ -612,6 +670,10 @@ Apply this file in the usual way and you will see that an *Ingress* is created.
 NAME                       HOSTS                 ADDRESS      PORTS   AGE
 ingress.extensions/kuard   kuard.cluster.local   172.21.0.5   80      119s
 ```
+
+Now our cluster looks like this
+
+![Service with Ingress](./images/figure6.png)
 
 Now you can finally access your application outside of the cluster, but if you open your browser and 
 visit `http://localhost` you will get a 404. So why? This is because the *Ingress* routes based on the host, we 
@@ -743,6 +805,10 @@ select the "File System Browser" on the left hand side. You will see a listing w
 file system, and if you browse around you will discovert the 2 `volumeMounts` we created, firstly the 
 directly `/config` containing all the files and secondly `/app/config.json` specifically being one of the keys. 
 **WARNING** If you mount a volume to a directory `path` any existing files in that directory will be removed.
+
+Now our cluster has a state which looks like the following.
+
+![Deployment with ConfigMap](./images/figure7.png)
 
 We previously talked about how the mounted *ConfigMap* is updated in the container if you change it, but there 
 is a pitfall...
@@ -1078,6 +1144,12 @@ base64 and injected into the container.
 
 ![Server Env Variables - Showing Secret](./images/browser3.png)
 
+You can probably guess by now how the cluster looks, but the state is the following. (This is not strictly accurate, 
+the `kuard-tls` *Secret* also exists because we never deleted it, but it is not being used either, we will use it in 
+the next step).
+
+![Deployment with Secret](./images/figure8.png)
+
 Now, change your browser so that you are using the address `https://kuard.cluster.local` instead. You should see a 
 warning that the certificate is not valid, this is because the default certificate is for `*.example.com` 
 (obviously in a production cluster you wouldn't have an invalid certificate as a fallback).
@@ -1114,6 +1186,10 @@ Apply the file and visit `https://kuard.cluster.local`. You will almost certainl
 it you will see that the certificate belongs to "kuard.cluster.local"; the reason for the error is because we
 generated a self-signed certificate, when using certificates for real you will get a certificate from a trusted 
 certificate authority.
+
+After applying the *Ingress* changes the cluster now looks like this
+
+![Ingress with Secret](./images/figure9.png)
 
 This may sound like a lot of work, thankfully there are ways to automate this process, with the use of [cert-manager](https://cert-manager.io)
 certificates can automatically be requested from [Let's Encrypt](https://letsencrypt.org) simply by creating an
@@ -1211,5 +1287,3 @@ By this point you should have an understanding of the following topics
 ## Helm
 
 ## Further Reading
-
-* Kubectl cluster, context, credentials?
