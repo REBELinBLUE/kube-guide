@@ -610,7 +610,7 @@ You may notice the *Endpoint*, just like *Deployments* create *ReplicaSets* whic
 will differ).
 
 ```bash
-❯ kubectl get endpoints kuard -o yaml
+❯ kubectl get endpoint kuard -o yaml
 apiVersion: v1
 kind: Endpoints
 metadata:
@@ -641,7 +641,7 @@ Now, let's scale so that we have multiple `replicas` of the *Pod*. You will noti
 communicate with the application after killing one of the *Pods* and before the new *Pod* has started.
 
 ```bash
-❯ kubectl scale deployment kuard --replicas=2
+❯ kubectl scale deployment/kuard --replicas=2
 deployment.apps/kuard scaled
 ```
 
@@ -1133,6 +1133,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kuard
+  labels:
+    app: kuard
 spec:
   selector:
     matchLabels:
@@ -1289,6 +1291,177 @@ Context "dev" modified.
 ```
 
 ## Persisting Data
+
+So far we have created applications which are entirely stateless, but there will be times you want to persist data and
+do not need to use a *StatefulSet*, for example user uploads or generated files. For this you can use a 
+*PersistentVolume*.
+
+Normally you would not create the *PersistentVolume* directly, instead you would create a *PersistentVolumeClaim*. When
+the *PersistentVolumeClaim* is used it will cause the *PersistentVolume* to be created, using the specified 
+*StorageClass* to dynamically provision the actual storage. *StorageClasses* and *PersistentVolumes* are cluster wide
+resources, where as *PersistentVolumeClaims* are scoped to a *Namespace*.
+
+Just as with *Ingress Controllers* and *NetworkPolicies* you are expected to provide an implementation to back a
+*StorageClass*, luckily k3d comes with [Rancher's Local Path Provisioner](https://github.com/rancher/local-path-provisioner)
+included.
+
+```bash
+❯ kubectl get storageclasses
+NAME                   PROVISIONER             AGE
+local-path (default)   rancher.io/local-path   24h
+```
+
+You may have already realised, but the `(default)` implies that you can have more than one *StorageClass* configured,
+so it is recommended that you define the required *StorageClass* on any *PersistentVolumeClaim*.
+
+Let's start by creating the claim, create a file called `8-pvc.yaml`
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kuard
+  labels:
+    app: kuard
+spec:
+  storageClassName: local-path 
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+```
+
+Now apply the file and then `get` the new resource
+
+```bash
+❯ kubectl apply -f 8-pvc.yaml
+persistentvolumeclaim/kuard created
+```
+
+In the other terminal you will see the *PersistentVolumeClaim* has been created.
+
+```bash
+NAME    STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+kuard   Pending                                      local-path     8s
+```
+
+You will notice that the "STATUS" of the claim is Pending, and it will stay like this until we use it, you can try
+`kubectl get persistentvolumes` and you will see that the *PersistentVolume* has not been created yet.
+
+Now it is time to consume the *PersistentVolumeClaim*, see if you can figure this out yourself, update your 
+*Deployment*, remembering you need to add the *Volume*, and then mount it into the container, you can use this 
+command `kubectl explain deployment.spec.template.spec.volumes` for help. The expected *Manifest* will look something 
+like the following.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuard
+  labels:
+    app: kuard
+spec:
+  selector:
+    matchLabels:
+      app: kuard
+  template:
+    metadata:
+      labels:
+        app: kuard
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kuard
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: kuard
+      containers:
+        - name: kuard
+          image: gcr.io/kuar-demo/kuard-amd64:purple
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: data-volume
+              mountPath: /data
+          env:
+            - name: A_SECRET_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kuard
+                  key: secret-password
+```
+
+Apply the manifest and you should see the *PersistentVolumeClaim* change, and you will also see the new 
+*PersistentVolume* resource.
+
+```bash
+NAME    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+kuard   Bound    pvc-14f9b407-3dff-498b-beaf-d72f9f0018e0   100Mi      RWO            local-path     11m
+
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM           STORAGECLASS   REASON   AGE
+pvc-14f9b407-3dff-498b-beaf-d72f9f0018e0   100Mi      RWO            Delete           Bound    default/kuard   local-path              17s
+```
+
+So now that a *PersistentVolume* has been created, the cluster looks like this.
+
+![Deployment with Persistent Volume](./images/figure10.png)
+
+If you browse to `http://kuard.cluster.local` again then select the "File system browser" you will see the new
+directory, but right now it is empty so let's create a file.
+
+The `local-path` provisioner creates a directory on the filesystem of the *Node*, use the following command to find 
+out which *Node* the *PersistentVolume* is on
+
+```bash
+❯ kubectl get persistentvolumes -o jsonpath='{.items[0].spec.nodeAffinity.required.nodeSelectorTerms[0].matchExpressions[0].values[0]}'
+k3d-dev-worker-2
+```
+
+You will notice this matches the "NODE" of the *Pods*, in fact if you were paying attention, when the *PersistentVolume*
+was created you would have noticed a *Pod* being evicted and recreated on the same *Node* as the other *Pod*. The reason
+for this is that all the *Pods* need to be able to access the local path, so as you can imagine, you should not use the
+`local-path` *StorageClass* in a real cluster, cloud providers normally include an *StorageClass* for creating native
+storage resources (provisioned by the *Cloud-Controller Manager*) and there are other options available such as the 
+[NFS Client Provisioner](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client).
+
+Use the following command to get the path of the directory on the *Node*.
+
+```bash
+❯ kubectl get persistentvolumes -o jsonpath='{.items[0].spec.hostPath.path}'
+/var/lib/rancher/k3s/storage/pvc-14f9b407-3dff-498b-beaf-d72f9f0018e0
+```
+
+```bash
+NODE=$(kubectl get persistentvolumes -o jsonpath='{.items[0].spec.nodeAffinity.required.nodeSelectorTerms[0].matchExpressions[0].values[0]}')
+PATH=$(kubectl get persistentvolumes -o jsonpath='{.items[0].spec.hostPath.path}'
+
+docker exec $NODE sh -c "echo 'Hello from the Node' > $PATH/hello.txt"
+```
+
+Now if you go back to the application in the browser you should see the file in the mounted directory, but how do 
+you know this is persistent?
+
+Let's create a file directly on the *Pod*.
+
+```bash
+❯ kubectl scale deployment/kuard --replicas=1
+❯ kubectl exec deployment/kuard -- sh -c "echo 'Hello from the Pod' > /tmp/hello2.txt"
+```
+> The reason for scaling down the *Deployment* is so that we know that the *Pod* the file is created on is the same
+> one we will be directed to when using the application.
+
+Use the file browser to check the file. Now kill the *Pods* and once the new one has started browse to the two files 
+to prove that the first file persists and the second does not.
+
+```bash
+❯ kubectl delete pods -l app=kuard
+pod "kuard-66b687b4bd-r4hsk" deleted
+```
 
 ## Maintaining Application and Cluster Health
 
