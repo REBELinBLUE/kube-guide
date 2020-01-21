@@ -13,13 +13,19 @@ spec:
       labels:
         app: kuard
     spec:
+      tolerations:
+        - key: "node.kubernetes.io/unreachable"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 5
+        - key: "node.kubernetes.io/not-ready"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 5
       volumes:
         - name: config-volume
           configMap:
             name: kuard
-        - name: data-volume
-          persistentVolumeClaim:
-            claimName: kuard
       containers:
         - name: kuard
           image: gcr.io/kuar-demo/kuard-amd64:purple
@@ -29,8 +35,6 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /config
-            - name: data-volume
-              mountPath: /data
           env:
             - name: A_SECRET_PASSWORD
               valueFrom:

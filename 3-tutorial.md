@@ -1,4 +1,4 @@
-# Tutorial
+# Step by Step Tutorial
 
 Now that you have an understanding of the core concepts it is time to try experimenting; for this tutorial you require 
 Docker installed.
@@ -34,6 +34,9 @@ have installed.
   * [Back to Using Secrets](#back-to-using-secrets)
 - [Persisting Data](#persisting-data)
 - [Maintaining Application and Cluster Health](#maintaining-application-and-cluster-health)
+  * [Reacting to losing a Node](#reacting-to-losing-a-node)
+  * [Replicas](#replicas)
+  * [Blue-Green Deployments](#blue-green-deployments)
 - [Summary](#summary)
 - [Helm](#helm)
 - [Further Reading](#further-reading)
@@ -351,7 +354,7 @@ replicaset.apps/kuard-5b89578678   1         1         1       46s     kuard    
 replicaset.apps/kuard-77d8b8d648   0         0         0       7m48s   kuard        gcr.io/kuar-demo/kuard-amd64:purple   app=kuard,pod-template-hash=77d8b8d648
 ```
 
-This is how Kubernetes performs zero downtime (also called blue/green or A/B) deployments. It creates a new 
+This is how Kubernetes performs zero downtime (also called blue-green or A/B) deployments. It creates a new 
 *ReplicaSet*, launches a *Pod* for the new *ReplicaSet* whilst destroying a *Pod* in the old *ReplicaSet* and 
 continues doing this until all *Pods* have been replaced. This is called the `RollingUpdate strategy`, if you 
 instead wanted all *Pods* destroyed first you can set `spec.strategy.type` to `Recreate` on the *Deployment* but then 
@@ -1465,7 +1468,161 @@ pod "kuard-66b687b4bd-r4hsk" deleted
 
 ## Maintaining Application and Cluster Health
 
-TODO: blue/green, readiness/liveness, node health
+In order to keep the application running smoothly, there are a few more steps which should be taken
+
+* Create replicas
+* Set a Deployment strategy
+* Add resource limits
+* Add readiness and liveness probes for health checks
+
+### Reacting to losing a Node
+
+Before that though, let's prove that Kubernetes is self healing and is able to recover from a *Node* disappearing.
+
+Edit the *Deployment* to look like the following.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuard
+  labels:
+    app: kuard
+spec:
+  selector:
+    matchLabels:
+      app: kuard
+  template:
+    metadata:
+      labels:
+        app: kuard
+    spec:
+      tolerations:
+        - key: "node.kubernetes.io/unreachable"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 5
+        - key: "node.kubernetes.io/not-ready"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 5
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kuard
+      containers:
+        - name: kuard
+          image: gcr.io/kuar-demo/kuard-amd64:purple
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+          env:
+            - name: A_SECRET_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kuard
+                  key: secret-password
+```
+
+You may notice that we have removed the *PersistentVolumeClaim* volume and volume mount; we are only doing this because 
+the `local path` provisioner is being used so all *Pods* for the *Deployment* are on the same *Node*, on a real cluster
+you want to avoid this situation.
+
+We also have `tolerations` defined, we previously mentioned these at the start of the tutorial, they are how 
+*Kubelet* and the *Scheduler* know whether *Pods* are allowed on *Nodes* which have been *tainted*; in a real cluster 
+you would also not need this. Kubernetes has a featured known as [Taint Based Evictions](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/#taint-based-evictions)
+, this means that when a *Node* meets certain conditions (mentioned on the linked page) it is tainted to say that is it
+unhealthy. For example, if the *Node* becomes unreachable the taint `node.kubernetes.io/unreachable` is added to it, by
+default Kubernetes will *tolerate* these *taints* for 300 seconds, however for testing purposes we have set it 
+to 5 seconds.
+
+*Taints* also have 3 effects, `NoSchedule` which means the *Pod* should never be scheduled on the *Node*, however 
+if the *taint* is added after it is already scheduled the *Pod* will not be evicted, `PreferNoSchedule` which means 
+the *Pod* can be scheduled but only as a last resort and `NoExecute` which means the *Pod* should be evicted from 
+the *Node* if it is already scheduled. 
+
+So in the *Deployment* we have said that we can *tolerate* the *taints* `node.kubernetes.io/unreachable` and
+`node.kubernetes.io/not-ready` with an effect of `NoExecute` for 5 seconds, after which time the *Pod* will be evicted 
+from the tainted *Node* and the *ReplicaSet* will result in it being rescheduled on a healthy *Node*.
+
+So now that we have explained *taints* and *tolerations*, apply the *Manifest* with `kubectl`. You may also 
+want to cancel the `watch` command on the second terminal and rerun it with just the following as these are the 
+only resources we care about from this point onwards.
+
+```bash
+❯ kubectl get nodes,pod,deploy,rs -o wide
+```
+
+Scale to 3 replicas also
+
+```bash
+❯ kubectl scale deployment/kuard --replicas=3
+```
+
+Now, if you look at the other terminal you should see that the 3 *Pods* should each be scheduled on a different *Node*.
+You can also see that the *ReplicaSet* had "DESIRED", "CURRENT" and "READY" all set to 3.
+
+We are going to shutdown the *Node* "k3d-dev-worker-1" to simulate it becoming unreachable.
+
+```bash
+❯ docker stop k3d-dev-worker-1
+```
+
+After approximately 30 seconds the "STATUS" of the *Node* should change to "NotReady", then approximately 5 seconds 
+later the *Pod* will change to "Terminating" and a new one created. This shows that the cluster has automatically
+recovered from a missing *Pod*. The status will stay at "Terminating" because the *API Server* has not yet been told 
+that the *Pod* has been terminated, once the *Node* recovers *Kubelet* will see that the *Pod* is supposed to be 
+terminated so will do so.
+
+Start the *Node* again and you will see this happen.
+
+```bash
+❯ docker start k3d-dev-worker-1
+```
+
+At these point you have 2 *Pods* from the same *ReplicaSet* on the same *Node*, in a production environment this is less
+likely to happen, it is just that we have the exactly same number of replicas as we do Nodes; however you can "fix" this
+simply by deleting one of the *Pods*. Just like there is the *Scheduler* component, there is also a [Descheduler](https://github.com/kubernetes-sigs/descheduler)
+to take care of this automatically but it is not a core component, this actually runs as a *Job*.
+
+### Replicas
+
+When running an application on a production cluster you want to run at least 3 replicas for a *Deployment*, this 
+ensures that if a *Node* goes down you still have a fallback until a new *Pod* is scheduled.
+
+Previously we set the number of replicas using `kubectl`, however this is not the best way to do it, as in reality
+you would want it defined in your *Manifest* (which you are of course storing in a version control system, right?).
+Thankfully it is just a case of setting one field
+
+```bash
+❯ kubectl explain deployment.spec.replicas
+KIND:     Deployment
+VERSION:  apps/v1
+
+FIELD:    replicas <integer>
+
+DESCRIPTION:
+     Number of desired pods. This is a pointer to distinguish between explicit
+     zero and not specified. Defaults to 1.
+```
+
+Reset the number of replicas back to 1 with `kubectl`
+
+```bash
+❯ kubectl scale deployment/kuard --replicas=1
+```
+
+Set the field on your *Deployment* and then apply it as usual, you will see the *Pods* created in actually the same way
+as if you had scaled using `kubectl scale`.
+
+If you want to turn off your application without deleting the resources you can set the replicas to 0, however it is
+worth nothing that if you have an *Ingress* defined any visitors will receive a "HTTP 503 Service Unavailable" 
+response instead of the normal "HTTP 404 Not Found" response.
+
+### Blue-Green Deployments
 
 ## Summary
 
@@ -1480,6 +1637,8 @@ By this point you should have an understanding of the following topics
 * Creating ConfigMaps & Secrets
 * Using ConfigMaps & Secrets as Volumes and Environment Variables
 * TLS Secrets & Using them with Ingresses
+* Using Persistent Volumes
+* Replicas, Probes and Deployment Strategy
 
 ## Helm
 

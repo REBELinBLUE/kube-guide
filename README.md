@@ -1,8 +1,11 @@
-# Kubernetes Introduction
+# Kubernetes Guide
 
 * [Introduction](./1-intro.md)
 * [Resource Types](./2-resources.md)
-* [Tutorial](./3-tutorial.md)
+* [Step by Step Tutorial](./3-tutorial.md)
+* Debugging
+* Logging, Metrics and Monitoring
+* Useful Tools
 * [Full Table of Contents](./toc.md)
 
 ## Other Useful Resources
