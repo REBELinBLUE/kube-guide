@@ -1821,11 +1821,11 @@ Exactly as you would expect! Delete the *Pod*, then edit the `memory` to a sensi
 you will see the is *Pod* created. If you describe the *Pod* you will instead see this time that it was Scheduled,
 Pulled, Created and Started.
 
-> Note: The reason for deleting the *Pod* is because more fields are immutable on *Pods*, this is not a problem when
+> Note: The reason for deleting the *Pod* is because most fields are immutable on *Pods*, this is not a problem when
 > editing a *Deployment* as you would be editing the template which the *ReplicaSet* uses for the *Pod* rather than 
 > the *Pod* itself.
 
-Now do the same thing with `resources.requests.cpu`, for example set it to 10 or 10000m to resource 10 cores 
+Now do the same thing with `resources.requests.cpu`, for example set it to 10 or 10000m to request 10 cores 
 (surely you don't have that many!). Apply the file and once again run `describe`, the output again says why the *Pod*
 is stuck Pending
 
@@ -1964,7 +1964,3 @@ By this point you should have an understanding of the following topics
 - Using Persistent Volumes
 - Replicas and Deployment Strategy
 - Resource Management and Health Checks
-
-## Helm
-
-## Further Reading
