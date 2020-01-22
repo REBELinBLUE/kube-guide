@@ -1894,9 +1894,11 @@ Containers:
 CPU throttling is harder to demonstrate, you can find an example on the [Kubernetes site](https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/)
 However I was not able to get it working properly on a virtual cluster.
 
-Now we've finished, delete the *Pod* and restart the *Nodes*.
+Now we've finished, delete the *Pod* and start the *Nodes* again.
 
 ```bash
+❯ kubectl delete pod/limit-test
+pod "limit-test" deleted
 ❯ docker start k3d-dev-worker-1 k3d-dev-worker-2
 ```
 
