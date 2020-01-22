@@ -1720,17 +1720,17 @@ M or K or in [binary/SI units](https://en.wikipedia.org/wiki/Binary_prefix) usin
 Ki where `1000Ki` is `1Mi` and `1M` is approximately `0.954Mi` If a container breaches the limit the *Pod* will 
 be killed with an `OOMKilled` (Out of Memory Killed) status. 
 - `ephemeral-storage` - Essentially the amount of temporary storage which can be consumed on the *Node*, used for 
-things such as logs, the `emptyDir` volume type, image layers and writable image layers. As with memory, in bytes with
+things such as logs, the `emptyDir` volume type and writable image layers. As with memory, in bytes, either
 in the standard units or binary. If a container breaches the limit the *Pod* will be evicted from the *Node*.
 
-There is also a `hugepage-*` resource type but this is a 
+There is also a `hugepage-*` resource type but this is quite specialised 
 [specialised resource type](https://kubernetes.io/docs/tasks/manage-hugepages/scheduling-hugepages/).
 
-Kubernetes has the ability to use extended resources for advertising and limiting the use of custom resources, for
+Kubernetes has the ability to use extended resources for limiting the use of other resources, for
 example specialised hardware resources, you can read about this in the [documentation](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#extended-resources)
 
-Typically you only want to supply the first 2 of these, `cpu` and `memory`. As an example your *ResourceRequirements*
-may look like the following
+Typically you only really need to supply the first 2 of these, `cpu` and `memory`. As an example your 
+*ResourceRequirements* may look like the following
 
 ```yaml
 spec:
@@ -1958,6 +1958,8 @@ spec:
               cpu: "500m"
               memory: "256Mi"
 ```
+
+FIXME: Add explanation of ResourceQuota and a new diagram
 
 ### Health Checks
 
