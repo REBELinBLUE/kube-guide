@@ -21,24 +21,24 @@ have installed.
 - [Creating a Pod](#creating-a-pod)
 - [Creating a Deployment](#creating-a-deployment)
 - [Making Your Deployment Accessible](#making-your-deployment-accessible)
-  * [Exposing Ports](#exposing-ports)
-  * [Services](#services)
-  * [Ingress](#ingress)
+    - [Exposing Ports](#exposing-ports)
+    - [Services](#services)
+    - [Ingress](#ingress)
 - [Injecting Configuration](#injecting-configuration)
-  * [Using ConfigMaps](#using-configmaps)
-  * [Using Secrets](#using-secrets)
-    + [TLS Secret](#tls-secret)
-    + [Docker Credentials](#docker-credentials)
-    + [Opaque Secrets](#opaque-secrets)
-    + [Secrets from Files](#secrets-from-files)
-  * [Back to Using Secrets](#back-to-using-secrets)
+    - [Using ConfigMaps](#using-configmaps)
+    - [Using Secrets](#using-secrets)
+        - [TLS Secret](#tls-secret)
+        - [Docker Credentials](#docker-credentials)
+        - [Opaque Secrets](#opaque-secrets)
+        - [Secrets from Files](#secrets-from-files)
+    - [Back to Using Secrets](#back-to-using-secrets)
 - [Persisting Data](#persisting-data)
 - [Maintaining Application and Cluster Health](#maintaining-application-and-cluster-health)
-  * [Reacting to losing a Node](#reacting-to-losing-a-node)
-  * [Replicas](#replicas)
-  * [Blue-Green Deployments](#blue-green-deployments)
-  * [Resource Management](#resource-management)
-  * [Health Checks](#health-checks)
+    - [Reacting to losing a Node](#reacting-to-losing-a-node)
+    - [Replicas](#replicas)
+    - [Blue-Green Deployments](#blue-green-deployments)
+    - [Resource Management](#resource-management)
+    - [Health Checks](#health-checks)
 - [Summary](#summary)
 - [Helm](#helm)
 - [Further Reading](#further-reading)
@@ -968,9 +968,9 @@ handling of the secret data and is normally only explicitly set when using the c
 The `Opaque` *Secret* is the generic type for handling unstructured key/value pairs, there are a few other types you 
 will encounter
 
-* `kubernetes.io/service-account-token` - Created by Kubernetes to hold the token for *ServiceAccounts*
-* `kubernetes.io/tls` - Used to store certificates and their keys
-* `kubernetes.io/dockerconfigjson` - Used to store Docker credentials for authenticating with registries (you may see 
+- `kubernetes.io/service-account-token` - Created by Kubernetes to hold the token for *ServiceAccounts*
+- `kubernetes.io/tls` - Used to store certificates and their keys
+- `kubernetes.io/dockerconfigjson` - Used to store Docker credentials for authenticating with registries (you may see 
 this as `kubernetes.io/dockercfg` also).
 
 #### TLS Secret
@@ -1457,6 +1457,7 @@ Let's create a file directly on the *Pod*.
 ❯ kubectl scale deployment/kuard --replicas=1
 ❯ kubectl exec deployment/kuard -- sh -c "echo 'Hello from the Pod' > /tmp/hello2.txt"
 ```
+
 > The reason for scaling down the *Deployment* is so that we know that the *Pod* the file is created on is the same
 > one we will be directed to when using the application.
 
@@ -1472,10 +1473,10 @@ pod "kuard-66b687b4bd-r4hsk" deleted
 
 In order to keep the application running smoothly, there are a few more steps which should be taken
 
-* Create replicas
-* Set a Deployment strategy
-* Add resource limits
-* Add readiness and liveness probes for health checks
+- Create replicas
+- Set a Deployment strategy
+- Add resource limits
+- Add readiness and liveness probes for health checks
 
 ### Reacting to losing a Node
 
@@ -1703,14 +1704,14 @@ restrictions, which is naturally a bad idea. As should be obvious, `limits` can 
 
 There are several types of resources available.
 
-* `cpu` - The amount of CPU usage the container is allowed, measured in cores or millicores, 1 being one core, 
+- `cpu` - The amount of CPU usage the container is allowed, measured in cores or millicores, 1 being one core, 
 and `100m` being 100 millicores, 1 core is equal to 1000 millicores. If the container breaches the limit it will 
 be throttled.
-* `memory` - The amount of memory the container is allowed, in bytes using the standard suffixes of E, P, T, G, 
+- `memory` - The amount of memory the container is allowed, in bytes using the standard suffixes of E, P, T, G, 
 M or K or in [binary/SI units](https://en.wikipedia.org/wiki/Binary_prefix) using suffixes of Ei, Pi, Ti, Gi, Mi or 
 Ki where `1000Ki` is `1Mi` and `1M` is approximately `0.954Mi` If a container breaches the limit the *Pod* will 
 be killed with an `OOMKilled` status. 
-* `ephemeral-storage` - Essentially the amount of temporary storage which can be consumed on the *Node*, used for 
+- `ephemeral-storage` - Essentially the amount of temporary storage which can be consumed on the *Node*, used for 
 things such as logs, the `emptyDir` volume type, image layers and writable image layers. As with memory, in bytes with
 in the standard units or binary. If a container breaches the limit the *Pod* will be evicted from the *Node*.
 
@@ -1838,10 +1839,9 @@ Events:
   Warning  FailedScheduling  <unknown>  default-scheduler  0/4 nodes are available: 4 Insufficient cpu.
 ```
 
+FIXME: Add a test for ephemeral-storage
 
-FIXME: Storage test here
-
-We are going now to make the *Pod* run a stress test to use up all resources
+We are now going to make the *Pod* run a stress test to use up the available memory.
 
 Delete the *Pod* and then edit the *Manifest* to look something like the following, set the `resources.requests` to 
 sensible values and set the `resources.limits` higher but not too high.
@@ -1866,10 +1866,10 @@ spec:
       args: ["--vm", "10", "--vm-bytes", "250M", "--vm-hang", "1", "--vm-keep"]
 ```
 
-Apply the *Manifest* and the *Pod* will start, after 5 seconds it will start using up more memory. You should see the 
-*Pod* status change to "OOMKilled", the container will restart a few times and eventually the *Pod* ends up in the
-status of "CrashLoopBack" (this is because our *Pod* is crashing quickly and often, normally it would just restart).
-Describe the *Pod* and you will see it is being killed because it is out of memory.
+Apply the *Manifest*, the *Pod* will start and it will start using up more memory. You should soon see the *Pod* status 
+change to "OOMKilled", the container will restart a few times and eventually the *Pod* ends up with a status of 
+"CrashLoopBack" (this is because our *Pod* is crashing quickly and often, normally it would just restart). Describe 
+the *Pod* and you will see it is being killed because it is out of memory.
 
 ```bash
 ❯ kubectl describe pod/limit-test
@@ -1886,8 +1886,9 @@ Containers:
 ```
 
 CPU throttling is harder to demonstrate, you can find an example on the [Kubernetes site](https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/)
+However I was not able to get it working properly on a virtual cluster.
 
-Now we've finished, delete the *Pod* and update the *Deployment* with sensible *ResourceRequirements* then apply it. 
+Now we've finished, delete the *Pod* and update the *Deployment* with sensible *ResourceRequirements*, then apply it. 
 The *Manifest* now looks something like the following
 
 ```yaml
@@ -1951,17 +1952,18 @@ spec:
 
 By this point you should have an understanding of the following topics
 
-* Using `kubectl api-resources` and `kubectl explain` for documentation
-* Pods
-* Labels, Annotations, Taints & Toleration
-* Deployments and ReplicaSets
-* Ports and Services
-* Ingresses
-* Creating ConfigMaps & Secrets
-* Using ConfigMaps & Secrets as Volumes and Environment Variables
-* TLS Secrets & Using them with Ingresses
-* Using Persistent Volumes
-* Replicas, Probes and Deployment Strategy
+- Using `kubectl api-resources` and `kubectl explain` for documentation
+- Pods
+- Labels, Annotations, Taints & Toleration
+- Deployments and ReplicaSets
+- Ports and Services
+- Ingresses
+- Creating ConfigMaps & Secrets
+- Using ConfigMaps & Secrets as Volumes and Environment Variables
+- TLS Secrets & Using them with Ingresses
+- Using Persistent Volumes
+- Replicas and Deployment Strategy
+- Resource Management and Health Checks
 
 ## Helm
 

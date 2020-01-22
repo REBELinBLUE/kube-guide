@@ -22,41 +22,41 @@ using `kubectl apply -f myapp.yaml`.
 ## Table of Contents
 
 - [Basic Resources](#basic-resources)
-  * [Pod](#pod)
-  * [Namespace](#namespace)
+    - [Pod](#pod)
+    - [Namespace](#namespace)
 - [Applications](#applications)
-  * [Deployment](#deployment)
-  * [ReplicaSet](#replicaset)
-  * [StatefulSet](#statefulset)
-  * [DaemonSet](#daemonset)
+    - [Deployment](#deployment)
+    - [ReplicaSet](#replicaset)
+    - [StatefulSet](#statefulset)
+    - [DaemonSet](#daemonset)
 - [Configuration](#configuration)
-  * [ConfigMap](#configmap)
-  * [Secret](#secret)
+    - [ConfigMap](#configmap)
+    - [Secret](#secret)
 - [Batch Processes](#batch-processes)
-  * [Jobs](#jobs)
-  * [Cronjobs](#cronjobs)
+    - [Jobs](#jobs)
+    - [Cronjobs](#cronjobs)
 - [Networking](#networking)
-  * [Service](#service)
-  * [Ingress](#ingress)
-  * [Endpoints](#endpoints)
+    - [Service](#service)
+    - [Ingress](#ingress)
+    - [Endpoints](#endpoints)
 - [Storage](#storage)
-  * [PersistentVolumeClaim](#persistentvolumeclaim)
-  * [PersistentVolume](#persistentvolume)
-  * [StorageClass](#storageclass)
-  * [Volumes](#volumes)
+    - [PersistentVolumeClaim](#persistentvolumeclaim)
+    - [PersistentVolume](#persistentvolume)
+    - [StorageClass](#storageclass)
+    - [Volumes](#volumes)
 - [Other Resources](#other-resources)
-  * [ServiceAccount](#serviceaccount)
-  * [Role](#role)
-  * [ClusterRole](#clusterrole)
-  * [RoleBinding](#rolebinding)
-  * [ClusterRoleBinding](#clusterrolebinding)
-  * [CustomResourceDefinition](#customresourcedefinition)
-  * [ResourceQuota](#resourcequota)
-  * [LimitRange](#limitrange)
-  * [HorizontalPodAutoscaler](#horizontalpodautoscaler)
-  * [NetworkPolicy](#networkpolicy)
-  * [PodSecurityPolicy](#podsecuritypolicy)
-  * [PodDisruptionBudget](#poddisruptionbudget)
+    - [ServiceAccount](#serviceaccount)
+    - [Role](#role)
+    - [ClusterRole](#clusterrole)
+    - [RoleBinding](#rolebinding)
+    - [ClusterRoleBinding](#clusterrolebinding)
+    - [CustomResourceDefinition](#customresourcedefinition)
+    - [ResourceQuota](#resourcequota)
+    - [LimitRange](#limitrange)
+    - [HorizontalPodAutoscaler](#horizontalpodautoscaler)
+    - [NetworkPolicy](#networkpolicy)
+    - [PodSecurityPolicy](#podsecuritypolicy)
+    - [PodDisruptionBudget](#poddisruptionbudget)
 
 ## Basic Resources
 
@@ -157,13 +157,13 @@ to manage configuration and secret data.
 
 A *ConfigMap* is simply a collection of key-value pairs. They can be used in several different ways
 
-* Mounted in whole as a directory into containers where each key is the name of the file created in the directory, and 
+- Mounted in whole as a directory into containers where each key is the name of the file created in the directory, and 
 the value is the contents.
-* Mount a specific key as a file into the container, where the filename is provided by the *Pod* resource (rather than 
+- Mount a specific key as a file into the container, where the filename is provided by the *Pod* resource (rather than 
 the *ConfigMap* key) but the value is the contents of the file.
-* Injected in whole as environments variables into the container, where the variable name matches the key and the 
+- Injected in whole as environments variables into the container, where the variable name matches the key and the 
 value is the value of the variable.
-* Injected individually as environment variables into the container, where the variable name is provided by the *Pod* 
+- Injected individually as environment variables into the container, where the variable name is provided by the *Pod* 
 resource (rather than the *ConfigMap* key) but the value is the value of the variable.
 
 Mounting/injecting the *ConfigMap* into containers is dealt with by *Kubelet*. When a *ConfigMap* is updated it is 
@@ -233,10 +233,10 @@ prevent this).
 
 There are several types of *Services* available
 
-* *ClusterIP* - This will dedicate an IP address to the service, this makes the *Service* reachable only within 
+- *ClusterIP* - This will dedicate an IP address to the service, this makes the *Service* reachable only within 
 the cluster.
-* *LoadBalancer* - This will create a LoadBalancer with your cloud provider to route traffic to your *Pod*.
-* *NodePort* - This will open a port on all *Nodes* and point it at your *Pod*.
+- *LoadBalancer* - This will create a LoadBalancer with your cloud provider to route traffic to your *Pod*.
+- *NodePort* - This will open a port on all *Nodes* and point it at your *Pod*.
 
 ### Ingress
 
