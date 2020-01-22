@@ -350,6 +350,8 @@ The cluster now looks like the following.
 Now let's see how the *ReplicaSets* work. Change the image tag from `purple` to `blue` and then apply the file again.
 Whilst you will see the same *Pod* behaviour as deleting a *Pod*, you will also see that there are now 2 *ReplicaSets*
 
+FIXME: Add something about image pull policy and latest tag
+
 ```bash
 NAME                               DESIRED   CURRENT   READY   AGE     CONTAINERS   IMAGES                                SELECTOR
 replicaset.apps/kuard-5b89578678   1         1         1       46s     kuard        gcr.io/kuar-demo/kuard-amd64:blue     app=kuard,pod-template-hash=5b89578678
@@ -1689,6 +1691,12 @@ the excess are terminated it will then create the next one, similarly when termi
 there are only 2 running until another has fully started.
 
 Try playing with these values and setting `spec.strategy` to "Recreate" to see how they work.
+
+To see the rolling update in action, change the image tag of the container to one of `purple`, `blue` or `green`, the
+image has these 3 tags available. If you apply the *Manifest* you will see the new *ReplicaSet* is created, with a 
+different image and the old *Pods* are destroyed whilst the new ones are created. If you try applying the *Manifest* 
+again you will see that nothing happens, this is because the cluster is already in the desired state dictated by the 
+file.
 
 ### Resource Management
 
