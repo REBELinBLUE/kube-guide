@@ -1790,8 +1790,6 @@ Shut down 2 of the *Nodes*
 
 ```bash
 ❯ docker stop k3d-dev-worker-1 k3d-dev-worker-2
-k3d-dev-worker-1
-k3d-dev-worker-2
 ```
 
 Create a *Pod* with a container which has a `resources.requests.memory` more than your capacity, for example
@@ -1896,8 +1894,13 @@ Containers:
 CPU throttling is harder to demonstrate, you can find an example on the [Kubernetes site](https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/)
 However I was not able to get it working properly on a virtual cluster.
 
-Now we've finished, delete the *Pod* and update the *Deployment* with sensible *ResourceRequirements*, then apply it. 
-The *Manifest* now looks something like the following
+Now we've finished, delete the *Pod* and restart the *Nodes*.
+
+```bash
+❯ docker start k3d-dev-worker-1 k3d-dev-worker-2
+```
+
+Update the *Deployment* with sensible *ResourceRequirements*, then apply it. The *Manifest* now looks something like the following
 
 ```yaml
 apiVersion: apps/v1
