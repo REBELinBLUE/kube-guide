@@ -1532,14 +1532,15 @@ the `local path` provisioner is being used so all *Pods* for the *Deployment* ar
 you want to avoid this situation.
 
 We also have `tolerations` defined, we previously mentioned these at the start of the tutorial, they are how 
-*Kubelet* and the *Scheduler* know whether *Pods* are allowed on *Nodes* which have been *tainted*; in a real cluster 
-you would also not need this. Kubernetes has a featured known as [Taint Based Evictions](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/#taint-based-evictions)
+*Kubelet* and the *Scheduler* know whether *Pods* are allowed on *Nodes* which have been *tainted*.
+Kubernetes has a featured known as [Taint Based Evictions](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/#taint-based-evictions)
 , this means that when a *Node* meets certain conditions (mentioned on the linked page) it is tainted to say that is it
 unhealthy. For example, if the *Node* becomes unreachable the taint `node.kubernetes.io/unreachable` is added to it, by
 default Kubernetes will *tolerate* these *taints* for 300 seconds, however for testing purposes we have set it 
-to 5 seconds.
+to 5 seconds. In a production real cluster you almost certainly don't want to change this so you can leave 
+the `tolerations` out of the *Manifest*. 
 
-*Taints* also have 3 effects, `NoSchedule` which means the *Pod* should never be scheduled on the *Node*, however 
+*Taints* have 3 effects, `NoSchedule` which means the *Pod* should never be scheduled on the *Node*, however 
 if the *taint* is added after it is already scheduled the *Pod* will not be evicted, `PreferNoSchedule` which means 
 the *Pod* can be scheduled but only as a last resort and `NoExecute` which means the *Pod* should be evicted from 
 the *Node* if it is already scheduled. 
@@ -1573,7 +1574,7 @@ We are going to shutdown the *Node* "k3d-dev-worker-1" to simulate it becoming u
 
 After approximately 30 seconds the "STATUS" of the *Node* should change to "NotReady", then approximately 5 seconds 
 later the *Pod* will change to "Terminating" and a new one created. This shows that the cluster has automatically
-recovered from a missing *Pod*. The status will stay at "Terminating" because the *API Server* has not yet been told 
+recovered from a missing *Node*. The status will stay at "Terminating" because the *API Server* has not yet been told 
 that the *Pod* has been terminated, once the *Node* recovers *Kubelet* will see that the *Pod* is supposed to be 
 terminated so will do so.
 
@@ -1623,6 +1624,62 @@ worth nothing that if you have an *Ingress* defined any visitors will receive a 
 response instead of the normal "HTTP 404 Not Found" response.
 
 ### Blue-Green Deployments
+
+In a production system, when you are deploying updates, you typically don't want your application to stop working whilst
+you are updating, this is known as a [Blue-Green Deployment](https://martinfowler.com/bliki/BlueGreenDeployment.html) 
+because you basically switch your "router" between 2 servers called blue and green, this is essentially how rolling
+updates works in Kubernetes.
+
+By default *Deployments* already using rolling updates, if, for some reason you instead need all the *Pods* destroyed
+before new *Pods* are created you can set `spec.strategy` to `Recreate`.
+
+```bash
+❯ kubectl explain deployment.spec.strategy
+KIND:     Deployment
+VERSION:  apps/v1
+
+RESOURCE: strategy <Object>
+
+DESCRIPTION:
+     The deployment strategy to use to replace existing pods with new ones.
+
+     DeploymentStrategy describes how to replace existing pods with new ones.
+
+FIELDS:
+   rollingUpdate	<Object>
+     Rolling update config params. Present only if DeploymentStrategyType =
+     RollingUpdate.
+
+   type	<string>
+     Type of deployment. Can be "Recreate" or "RollingUpdate". Default is
+     RollingUpdate.
+``` 
+
+There are a couple of options which can be tweaked when using rolling update, the first `maxUnavailable` dictates
+the maximum amount of *Pods* belonging to the *ReplicaSet* which can be unavailable during an update, and `maxSurge` 
+dictates the amount of *Pods* above the `replica` count which can be created during an update.
+
+Both of these fields can either be an absolute value (i.e. `1`) or a percentage (`25%`), the default value is `25%`. 
+You can not set both fields to 0 at the same time, otherwise it would not be possible to destroy nor create *Pods*.
+
+So take the following example
+
+```yaml
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+```
+
+This means that Kubernetes will let the number of *Pods* running drop to 2 and increase to 4 during a rolling update,
+i.e. when the *Scheduler* places a *Pod* the *ReplicaSet* will not create another one if 4 are already running, once 
+the excess are terminated it will then create the next one, similarly when terminating the old *Pods* it will stop when
+there are only 2 running until another has fully started.
+
+Try playing with these values and, setting `spec.strategy` to "Recreate" to see how they work.
 
 ## Summary
 

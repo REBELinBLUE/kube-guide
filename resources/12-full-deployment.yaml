@@ -6,8 +6,9 @@ spec:
   selector:
     matchLabels:
       app: kuard
-  replicas: 3
+
   minReadySeconds: 15
+  replicas: 3
   strategy:
     type: RollingUpdate
     rollingUpdate:
