@@ -80,6 +80,7 @@
     + [Reacting to losing a Node](./3-tutorial.md#reacting-to-losing-a-node)
     + [Replicas](./3-tutorial.md#replicas)
     + [Blue-Green Deployments](./3-tutorial.md#blue-green-deployments)
+    * [Resource Management](./3-tutorial.md#resource-management)
   * [Summary](./3-tutorial.md#summary)
   * [Helm](./3-tutorial.md#helm)
   * [Further Reading](./3-tutorial.md#further-reading)

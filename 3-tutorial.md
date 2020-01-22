@@ -37,6 +37,7 @@ have installed.
   * [Reacting to losing a Node](#reacting-to-losing-a-node)
   * [Replicas](#replicas)
   * [Blue-Green Deployments](#blue-green-deployments)
+  * [Resource Managerment](#resource-management)
 - [Summary](#summary)
 - [Helm](#helm)
 - [Further Reading](#further-reading)
@@ -490,7 +491,7 @@ the new container to demonstrate that they can communicate
   ...
 ```
 
-As you can see, the `curl` container (specified by the `-c curl` is able to communicate with the `kuard` container). 
+As you can see, the `curl` container (specified by the `-c curl`) is able to communicate with the `kuard` container. 
 You can now apply the previous version of the manifest to remove the extra container (you should do this otherwise the 
 Pod will crash after 10 minutes as it is just running `sleep 600`; although you may want to change this value to a 
 lower value such as 10 so that can observe as the container dies and the *Pod* is restarted).
@@ -1623,6 +1624,9 @@ If you want to turn off your application without deleting the resources you can 
 worth nothing that if you have an *Ingress* defined any visitors will receive a "HTTP 503 Service Unavailable" 
 response instead of the normal "HTTP 404 Not Found" response.
 
+
+FIXME: Add something about HPA
+
 ### Blue-Green Deployments
 
 In a production system, when you are deploying updates, you typically don't want your application to stop working whilst
@@ -1679,7 +1683,22 @@ i.e. when the *Scheduler* places a *Pod* the *ReplicaSet* will not create anothe
 the excess are terminated it will then create the next one, similarly when terminating the old *Pods* it will stop when
 there are only 2 running until another has fully started.
 
-Try playing with these values and, setting `spec.strategy` to "Recreate" to see how they work.
+Try playing with these values and setting `spec.strategy` to "Recreate" to see how they work.
+
+### Resource Management
+
+In order to ensure the cluster remains responsive and stable you need to manage the resources that your applications
+can use, first you can be apply a *ResourceQuota* on a per *Namespace* basis to set aggregate limits for all *Pods*,
+and more importantly you can set *ResourceRequirements* on a per container level.
+
+*ResourceRequirements* are set by providing the `resources` value on each container. There are 2 types of avaiable; 
+`limits`, which sets the maximum resources the container may use, and  `requests` which is essentially the minimum 
+resources the container requires, the *Scheduler* will use these values when scheduling your *Pods*; if you do not 
+provide `requests` it will default to the `limits`, and if you don't provide a `limits` there is no resource 
+restrictions, which is naturally a bad idea.
+
+There 
+
 
 ## Summary
 
