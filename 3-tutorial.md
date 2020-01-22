@@ -1631,9 +1631,6 @@ If you want to turn off your application without deleting the resources you can 
 worth nothing that if you have an *Ingress* defined any visitors will receive a "HTTP 503 Service Unavailable" 
 response instead of the normal "HTTP 404 Not Found" response.
 
-
-FIXME: Add something about HPA
-
 ### Blue-Green Deployments
 
 In a production system, when you are deploying updates, you typically don't want your application to stop working whilst
@@ -1891,8 +1888,8 @@ Containers:
       Finished:     Wed, 22 Jan 2020 21:48:48 +0000
 ```
 
-CPU throttling is harder to demonstrate, you can find an example on the [Kubernetes site](https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/)
-However I was not able to get it working properly on a virtual cluster.
+CPU throttling is harder to demonstrate, I was not able to get a demo working properly on a virtual cluster but you can 
+find an example on the [Kubernetes site](https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/).
 
 Now we've finished, delete the *Pod* and start the *Nodes* again.
 
@@ -1902,7 +1899,8 @@ pod "limit-test" deleted
 ❯ docker start k3d-dev-worker-1 k3d-dev-worker-2
 ```
 
-Update the *Deployment* with sensible *ResourceRequirements*, then apply it. The *Manifest* now looks something like the following
+Update the *Deployment* with sensible *ResourceRequirements*, then apply it. The *Manifest* now looks something 
+like the following
 
 ```yaml
 apiVersion: apps/v1
@@ -1958,8 +1956,6 @@ spec:
               cpu: "500m"
               memory: "256Mi"
 ```
-
-FIXME: Add explanation of ResourceQuota and a new diagram
 
 ### Health Checks
 
