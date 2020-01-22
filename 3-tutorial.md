@@ -37,7 +37,8 @@ have installed.
   * [Reacting to losing a Node](#reacting-to-losing-a-node)
   * [Replicas](#replicas)
   * [Blue-Green Deployments](#blue-green-deployments)
-  * [Resource Managerment](#resource-management)
+  * [Resource Management](#resource-management)
+  * [Health Checks](#health-checks)
 - [Summary](#summary)
 - [Helm](#helm)
 - [Further Reading](#further-reading)
@@ -1585,10 +1586,13 @@ Start the *Node* again and you will see this happen.
 ❯ docker start k3d-dev-worker-1
 ```
 
-At these point you have 2 *Pods* from the same *ReplicaSet* on the same *Node*, in a production environment this is less
+At this point you have 2 *Pods* from the same *ReplicaSet* on the same *Node*, in a production environment this is less
 likely to happen, it is just that we have the exactly same number of replicas as we do Nodes; however you can "fix" this
 simply by deleting one of the *Pods*. Just like there is the *Scheduler* component, there is also a [Descheduler](https://github.com/kubernetes-sigs/descheduler)
 to take care of this automatically but it is not a core component, this actually runs as a *Job*.
+
+You can now re-add the *PersistentVolumeClaim* volume and volume mount to the *Deployment*, and remove the 
+*tolerations*.
 
 ### Replicas
 
@@ -1691,14 +1695,257 @@ In order to ensure the cluster remains responsive and stable you need to manage 
 can use, first you can be apply a *ResourceQuota* on a per *Namespace* basis to set aggregate limits for all *Pods*,
 and more importantly you can set *ResourceRequirements* on a per container level.
 
-*ResourceRequirements* are set by providing the `resources` value on each container. There are 2 types of avaiable; 
-`limits`, which sets the maximum resources the container may use, and  `requests` which is essentially the minimum 
+*ResourceRequirements* are set by providing the `resources` value on each container. There are 2 types of available; 
+`limits`, which sets the maximum resources the container may use, and `requests` which is essentially the minimum 
 resources the container requires, the *Scheduler* will use these values when scheduling your *Pods*; if you do not 
 provide `requests` it will default to the `limits`, and if you don't provide a `limits` there is no resource 
-restrictions, which is naturally a bad idea.
+restrictions, which is naturally a bad idea. As should be obvious, `limits` can not be lower than `requests`.
 
-There 
+There are several types of resources available.
 
+* `cpu` - The amount of CPU usage the container is allowed, measured in cores or millicores, 1 being one core, 
+and `100m` being 100 millicores, 1 core is equal to 1000 millicores. If the container breaches the limit it will 
+be throttled.
+* `memory` - The amount of memory the container is allowed, in bytes using the standard suffixes of E, P, T, G, 
+M or K or in [binary/SI units](https://en.wikipedia.org/wiki/Binary_prefix) using suffixes of Ei, Pi, Ti, Gi, Mi or 
+Ki where `1000Ki` is `1Mi` and `1M` is approximately `0.954Mi` If a container breaches the limit the *Pod* will 
+be killed with an `OOMKilled` status. 
+* `ephemeral-storage` - Essentially the amount of temporary storage which can be consumed on the *Node*, used for 
+things such as logs, the `emptyDir` volume type, image layers and writable image layers. As with memory, in bytes with
+in the standard units or binary. If a container breaches the limit the *Pod* will be evicted from the *Node*.
+
+There is also a `hugepage-*` resource type but this is a 
+[specialised resource type](https://kubernetes.io/docs/tasks/manage-hugepages/scheduling-hugepages/).
+
+Kubernetes has the ability to use extended resources for advertising and limiting the use of custom resources, for
+example specialised hardware resources, you can read about this in the [documentation](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#extended-resources)
+
+Typically you only want to supply the first 2 of these, `cpu` and `memory`. As an example your *ResourceRequirements*
+may look like the following
+
+```yaml
+spec:
+  containers:
+    - name: kuard
+      image: gcr.io/kuar-demo/kuard-amd64:purple
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "128Mi"
+        limits:
+          cpu: "500m"
+          memory: "256Mi"
+```
+
+This means that during *Scheduling* the containers needs at least one tenth of a core (100 millicores) and 128Mi of 
+available memory and it is limited to only using half a core (500 millicores) and 256Mi of memory.
+
+Now let's try to see what happens when these limits are breached, obviously this is a bit hard to force.
+
+> WARNING: Do not try these experiments if you are running this tutorial on a real Kubernetes cluster running no
+> a cloud provider, you could accidentally cause more *Nodes* to be created which will cost you money especially if 
+> they are powerful machines.
+
+Use the `describe` command to check the allocated resources on each of your *Nodes*.
+
+```bash
+❯ kubectl describe node/k3d-dev-worker-0
+Name:               k3d-dev-worker-0
+Roles:              worker
+...
+Capacity:
+  cpu:                4
+  ephemeral-storage:  61255492Ki
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             2037260Ki
+  pods:               110
+Allocatable:
+  cpu:                4
+  ephemeral-storage:  59589342571
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             2037260Ki
+  pods:               110
+...
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests   Limits
+  --------           --------   ------
+  cpu                100m (2%)  0 (0%)
+  memory             70Mi (3%)  170Mi (8%)
+  ephemeral-storage  0 (0%)     0 (0%)
+```
+
+Shut down 2 of the *Nodes*
+
+```bash
+❯ docker stop k3d-dev-worker-1 k3d-dev-worker-2
+k3d-dev-worker-1
+k3d-dev-worker-2
+```
+
+Create a *Pod* with a container which has a `resources.requests.memory` more than your capacity, for example
+1Ti, so that it looks something like the following
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: limit-test
+spec:
+  containers:
+    - name: kuard
+      image: gcr.io/kuar-demo/kuard-amd64:purple
+      resources:
+        requests:
+          memory: "1Ti"
+```
+
+Apply the file and you will notice the new *Pod* has a "STATUS" of Pending which never changes. 
+
+You can use the `describe` command to find out why
+
+```bash
+❯ kubectl describe pod/limit-test
+Name:         limit-test
+...
+Events:
+  Type     Reason            Age        From               Message
+  ----     ------            ----       ----               -------
+  Warning  FailedScheduling  <unknown>  default-scheduler  0/4 nodes are available: 4 Insufficient memory.
+```
+
+Exactly as you would expect! Delete the *Pod*, then edit the `memory` to a sensible value, apply the file and now 
+you will see the is *Pod* created. If you describe the *Pod* you will instead see this time that it was Scheduled,
+Pulled, Created and Started.
+
+> Note: The reason for deleting the *Pod* is because more fields are immutable on *Pods*, this is not a problem when
+> editing a *Deployment* as you would be editing the template which the *ReplicaSet* uses for the *Pod* rather than 
+> the *Pod* itself.
+
+Now do the same thing with `resources.requests.cpu`, for example set it to 10 or 10000m to resource 10 cores 
+(surely you don't have that many!). Apply the file and once again run `describe`, the output again says why the *Pod*
+is stuck Pending
+
+```bash
+❯ kubectl describe pod/limit-test
+Name:         limit-test
+...
+Events:
+  Type     Reason            Age        From               Message
+  ----     ------            ----       ----               -------
+  Warning  FailedScheduling  <unknown>  default-scheduler  0/4 nodes are available: 4 Insufficient cpu.
+```
+
+
+FIXME: Storage test here
+
+We are going now to make the *Pod* run a stress test to use up all resources
+
+Delete the *Pod* and then edit the *Manifest* to look something like the following, set the `resources.requests` to 
+sensible values and set the `resources.limits` higher but not too high.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: limit-test
+spec:
+  containers:
+    - name: stress
+      image: polinux/stress
+      resources:
+        requests:
+          memory: "50Mi"
+          cpu: "100m"
+        limits:
+          memory: "100Mi"
+          cpu: "110m"
+      command: ["stress"]
+      args: ["--vm", "10", "--vm-bytes", "250M", "--vm-hang", "1", "--vm-keep"]
+```
+
+Apply the *Manifest* and the *Pod* will start, after 5 seconds it will start using up more memory. You should see the 
+*Pod* status change to "OOMKilled", the container will restart a few times and eventually the *Pod* ends up in the
+status of "CrashLoopBack" (this is because our *Pod* is crashing quickly and often, normally it would just restart).
+Describe the *Pod* and you will see it is being killed because it is out of memory.
+
+```bash
+❯ kubectl describe pod/limit-test
+Name:         limit-test
+...
+Containers:
+  kuard:
+    ...
+    State:          Terminated
+      Reason:       OOMKilled
+      Exit Code:    3
+      Started:      Wed, 22 Jan 2020 21:48:43 +0000
+      Finished:     Wed, 22 Jan 2020 21:48:48 +0000
+```
+
+CPU throttling is harder to demonstrate, you can find an example on the [Kubernetes site](https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/)
+
+Now we've finished, delete the *Pod* and update the *Deployment* with sensible *ResourceRequirements* then apply it. 
+The *Manifest* now looks something like the following
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuard
+  labels:
+    app: kuard
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: kuard
+  template:
+    metadata:
+      labels:
+        app: kuard
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kuard
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: kuard
+      containers:
+        - name: kuard
+          image: gcr.io/kuar-demo/kuard-amd64:purple
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: data-volume
+              mountPath: /data
+          env:
+            - name: A_SECRET_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kuard
+                  key: secret-password
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+```
+
+### Health Checks
 
 ## Summary
 
