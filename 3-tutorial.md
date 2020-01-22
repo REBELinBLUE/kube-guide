@@ -1718,7 +1718,7 @@ be throttled.
 - `memory` - The amount of memory the container is allowed, in bytes using the standard suffixes of E, P, T, G, 
 M or K or in [binary/SI units](https://en.wikipedia.org/wiki/Binary_prefix) using suffixes of Ei, Pi, Ti, Gi, Mi or 
 Ki where `1000Ki` is `1Mi` and `1M` is approximately `0.954Mi` If a container breaches the limit the *Pod* will 
-be killed with an `OOMKilled` status. 
+be killed with an `OOMKilled` (Out of Memory Killed) status. 
 - `ephemeral-storage` - Essentially the amount of temporary storage which can be consumed on the *Node*, used for 
 things such as logs, the `emptyDir` volume type, image layers and writable image layers. As with memory, in bytes with
 in the standard units or binary. If a container breaches the limit the *Pod* will be evicted from the *Node*.
