@@ -80,5 +80,3 @@
         - [Resource Management](./3-tutorial.md#resource-management)
         - [Health Checks](./3-tutorial.md#health-checks)
     - [Summary](./3-tutorial.md#summary)
-    - [Helm](./3-tutorial.md#helm)
-    - [Further Reading](./3-tutorial.md#further-reading)

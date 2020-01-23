@@ -64,11 +64,11 @@ using `kubectl apply -f myapp.yaml`.
 
 ![Pod Icon](./images/icons/resources/pod-128.png)
 
-A *Pod* is the smallest unit in Kubernetes, it is a collection of Containers which run on a single *Node*. Containers 
+A *Pod* is the smallest unit in Kubernetes, it is a collection of containers which run on a single *Node*. Containers 
 within a *Pod* address each other via the normal loopback interface (localhost), however, containers do not share a 
 filesystem so you need to use a *Volume* to share files between them, although this should be a very rare requirement. 
 Along with containers, *Pods* can have *initContainers*, which are containers which run in sequence before starting the 
-\main containers, these can be used to bootstrap the *Pod*, for example by warming up a cache or retrieving data from 
+main containers, these can be used to bootstrap the *Pod*, for example by warming up a cache or retrieving data from 
 a remote system.
 
 You would typically run multiple replicas of a *Pod*, which would be scheduled on different *Nodes*, this ensures 
@@ -103,9 +103,9 @@ and it's use-case, either a stateless application, a stateful application or a d
 ![Deployment Icon](./images/icons/resources/deploy-128.png)
 
 The *Deployment* is a high level abstraction for defining and updating *Pods* and *ReplicaSets*. If you are running 
-a stateless app which needs to run continuously, such as a HTTP server, you will create a *Deployment*. *Deployments* 
-allow you to update a running app without downtime, they also specify a strategy for restarting *Pods* if 
-(or rather, when) they die. This is the type of resources you will normally create most often.
+a stateless application which needs to run continuously, such as a HTTP server, you will create a *Deployment*. 
+*Deployments* allow you to update a running application without downtime, they also specify a strategy for restarting 
+*Pods* if (or rather, when) they die. This is the type of resources you will normally create most often.
 
 ### ReplicaSet
 
@@ -134,7 +134,8 @@ This means that *StatefulSets* perform updates in a different manner to *Deploym
 
 Data would be stored in a *PersistentVolume* (more on those later), however, unlike *StatefulSets* you would have a 
 *Volume* for each *Pod* rather than sharing it between pods. You would typically use *StatefulSets* for things such 
-as redis, etcd or rabbitmq, replicating data is down to the individual application.
+as [redis](https://redis.io), [etcd](https://etcd.io) or [rabbitmq](https://www.rabbitmq.com), replicating data 
+is down to the individual application.
 
 ### DaemonSet
 
@@ -237,6 +238,7 @@ There are several types of *Services* available
 the cluster.
 - *LoadBalancer* - This will create a LoadBalancer with your cloud provider to route traffic to your *Pod*.
 - *NodePort* - This will open a port on all *Nodes* and point it at your *Pod*.
+- *ExternalName* - For forwarding requests to an external DNS address.
 
 ### Ingress
 
@@ -258,8 +260,8 @@ implementation is used, can do things like authentication, IP whitelisting, requ
 
 ![Endpoint Icon](./images/icons/resources/ep-128.png)
 
-The *Endpoint* is a collection of addresses which implement the actual *Service*; you never need to interact with 
-these directly as they are created automatically when a *Service* is created.
+The *Endpoint* is a collection of addresses which implement the actual *Service*; you never need to create these 
+directly as they are created automatically when a *Service* is created.
 
 ## Storage
 
@@ -309,7 +311,7 @@ containers (which is destroyed when the *Pod* dies), but they are also used to m
 
 ## Other Resources
 
-Then are many other resource types which you may hear talked about, along with the *CustomResourceDefinitions* 
+There are many other resource types which you may hear talked about, along with the *CustomResourceDefinitions* 
 provided by many applications. A few of the more common ones are briefly explained below, see the 
 [Kubernetes documentation](https://kubernetes.io/docs/concepts/) for a full explanation.
 

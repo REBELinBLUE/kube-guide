@@ -3,8 +3,9 @@
 Now that you have an understanding of the core concepts it is time to try experimenting; for this tutorial you require 
 Docker installed.
 
-You also need to install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and 
-[k3d](https://github.com/rancher/k3d), if you are using a Mac both of these are available via [brew](https://brew.sh).
+You also need to install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/), 
+[k3d](https://github.com/rancher/k3d), [watch](https://gitlab.com/procps-ng/procps) if you are using a Mac these 
+are available via [brew](https://brew.sh).
 
 Please ensure that you have a recent version of `kubectl`, the version installed by Docker desktop is not recent 
 enough. This guide was written using version 1.17.1, use `kubectl version` to confirm the version which you 
@@ -12,11 +13,10 @@ have installed.
 
 > Throughout this tutorial you will find diagrams of the state of the cluster, a solid line indicates that the resource
 > references the resource it is pointing to, where as a dotted line indicates that it creates the other resource. Each 
-> namespace has a "default" *ServiceAccount* with a *Secret*, this will be left out of the diagrams until it is used.
+> namespace has a "default" *ServiceAccount* with a *Secret*, this will be left out of the diagrams.
 
 ## Table of Contents
 
-- [Table of Content](#table-of-content)
 - [Cluster Setup](#cluster-setup)
 - [Creating a Pod](#creating-a-pod)
 - [Creating a Deployment](#creating-a-deployment)
@@ -40,13 +40,11 @@ have installed.
     - [Resource Management](#resource-management)
     - [Health Checks](#health-checks)
 - [Summary](#summary)
-- [Helm](#helm)
-- [Further Reading](#further-reading)
   
 ## Cluster Setup
 
 k3d is a tool for running a virtual cluster in Docker, the first step is to bootstrap a cluster, for this we will 
-create 3 workers and direct port `80` on the local machine to port `80` on the cluster.
+create 3 workers and direct port `80` and `443` on the local machine to the same ports on the cluster.
 
 ```bash
 ❯ k3d create --name dev --api-port 6551 --publish 80:80 --publish 443:443 --workers 3
@@ -258,7 +256,7 @@ pod "kuard" deleted
 ```
 
 If you watch the other terminal window you will notice that the *Pod* is not recreated, this shows that you can not 
-use them on their own if you want your application to have redundancy.
+use them on their own if you want your application to be self healing.
 
 ## Creating a Deployment
 

@@ -110,7 +110,7 @@ This is the main binary which was mentioned earlier, it is made up of a series o
 actually be run seperately, they are typically run as a single binary. While the *Scheduler* takes care of
 placing *Pods*, the *Controllers* take care of almost everything else. There are a variety of *Controllers*,
 typically one for each resource, such as the *Deployment Controller*, *StatefulSet Controller*, *Namespace Controller*,
-*ServiceAccount Controller*, *Job Controller* and a *Pod Garbage Collector Controller* etc. These are just some of the
+*ServiceAccount Controller*, *Job Controller* and a *Pod Garbage Collector Controller*. These are just some of the
 built-in controllers, but it is actually possible to create custom controllers yourself if you are willing to write
 some code. There are some *Controllers* you are expected to provide yourself, for instance, although Kubernetes has the
 concept of an *Ingress* it does not include an *Ingress Controller*.
