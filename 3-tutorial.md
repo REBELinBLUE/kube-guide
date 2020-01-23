@@ -1636,7 +1636,7 @@ you are updating, this is known as a [Blue-Green Deployment](https://martinfowle
 because you basically switch your "router" between 2 servers called blue and green, this is essentially how rolling
 updates works in Kubernetes.
 
-By default *Deployments* already using rolling updates, if, for some reason you instead need all the *Pods* destroyed
+By default *Deployments* already use rolling updates, if, for some reason you instead need all the *Pods* destroyed
 before new *Pods* are created you can set `spec.strategy` to `Recreate`.
 
 ```bash
@@ -1718,7 +1718,7 @@ be killed with an `OOMKilled` (Out of Memory Killed) status.
 things such as logs, the `emptyDir` volume type and writable image layers. As with memory, in bytes, either
 in the standard units or binary. If a container breaches the limit the *Pod* will be evicted from the *Node*.
 
-There is also a `hugepage-*` resource type but this is quite specialised 
+There is also a `hugepage-*` resource type but this is quite 
 [specialised resource type](https://kubernetes.io/docs/tasks/manage-hugepages/scheduling-hugepages/).
 
 Kubernetes has the ability to use extended resources for limiting the use of other resources, for
@@ -1734,11 +1734,11 @@ spec:
       image: gcr.io/kuar-demo/kuard-amd64:purple
       resources:
         requests:
-          cpu: "100m"
-          memory: "128Mi"
+          cpu: 100m
+          memory: 128Mi
         limits:
-          cpu: "500m"
-          memory: "256Mi"
+          cpu: 500m
+          memory: 256Mi
 ```
 
 This means that during *Scheduling* the containers needs at least one tenth of a core (100 millicores) and 128Mi of 
@@ -1746,7 +1746,7 @@ available memory and it is limited to only using half a core (500 millicores) an
 
 Now let's try to see what happens when these limits are breached, obviously this is a bit hard to force.
 
-> WARNING: Do not try these experiments if you are running this tutorial on a real Kubernetes cluster running no
+> WARNING: Do not try these experiments if you are running this tutorial on a real Kubernetes cluster running on
 > a cloud provider, you could accidentally cause more *Nodes* to be created which will cost you money especially if 
 > they are powerful machines.
 
@@ -1877,7 +1877,7 @@ the *Pod* and you will see it is being killed because it is out of memory.
 Name:         limit-test
 ...
 Containers:
-  kuard:
+  stress:
     ...
     State:          Terminated
       Reason:       OOMKilled
@@ -1948,11 +1948,11 @@ spec:
                   key: secret-password
           resources:
             requests:
-              cpu: "100m"
-              memory: "128Mi"
+              cpu: 100m
+              memory: 128Mi
             limits:
-              cpu: "500m"
-              memory: "256Mi"
+              cpu: 500m
+              memory: 256Mi
 ```
 
 ### Health Checks
