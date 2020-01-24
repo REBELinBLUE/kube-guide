@@ -22,7 +22,7 @@ have installed.
 - [Creating a Deployment](#creating-a-deployment)
 - [Making Your Deployment Accessible](#making-your-deployment-accessible)
     - [Exposing Ports](#exposing-ports)
-        - [Communication in a Pod](#communication-in-a-pod)
+        - [Communication within a Pod](#communication-within-a-pod)
         - [Communication between different Pods](#communication-between-different-pods)
     - [Services](#services)
     - [Ingress](#ingress)
@@ -442,7 +442,7 @@ Ports are actually exposed when you build your image, using the `EXPOSE` directi
 is recommended that you provide the port specification so that other users know which ports are being exposed and so 
 that information can be discovered via the resource definition.
 
-#### Communication in a Pod
+#### Communication within a Pod
 
 Containers within a *Pod* can communicate with each other via localhost, we will now add a second container to 
 demonstrate this.

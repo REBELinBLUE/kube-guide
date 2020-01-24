@@ -62,7 +62,7 @@
     - [Creating a Deployment](./3-tutorial.md#creating-a-deployment)
     - [Making Your Deployment Accessible](./3-tutorial.md#making-your-deployment-accessible)
         - [Exposing Ports](./3-tutorial.md#exposing-ports)
-            - [Communication in a Pod](#communication-in-a-pod)
+            - [Communication within a Pod](#communication-within-a-pod)
             - [Communication between different Pods](#communication-between-different-pods)
         - [Services](./3-tutorial.md#services)
         - [Ingress](./3-tutorial.md#ingress)
