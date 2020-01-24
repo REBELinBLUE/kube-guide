@@ -618,7 +618,7 @@ The cluster now looks like this.
 ![Service](./images/figure4.png)
 
 You may notice the *Endpoint*, just like *Deployments* create *ReplicaSets* which point at the specific *Pods*, 
-*Services* are backed by *Endpoints* which point to the *Pods*. You can see how this looks (bare in mind your output
+*Services* are backed by *Endpoints* which point to the *Pods*. You can see how this looks (bear in mind your output
 will differ).
 
 ```bash
