@@ -100,11 +100,11 @@ If you run `docker ps` you can see the virtual cluster running via Docker.
 
 ```bash
 ❯ docker ps
-CONTAINER ID        IMAGE                COMMAND                  CREATED             STATUS              PORTS                                        NAMES
-32b222baaf25        rancher/k3s:v1.0.1   "/bin/k3s agent"         8 minutes ago       Up 8 minutes                                                     k3d-dev-worker-2
-3ca00a875799        rancher/k3s:v1.0.1   "/bin/k3s agent"         8 minutes ago       Up 8 minutes                                                     k3d-dev-worker-1
-60279aafce8d        rancher/k3s:v1.0.1   "/bin/k3s agent"         8 minutes ago       Up 8 minutes                                                     k3d-dev-worker-0
-eb59d7980fb8        rancher/k3s:v1.0.1   "/bin/k3s server --h…"   8 minutes ago       Up 8 minutes        0.0.0.0:80->80/tcp, 0.0.0.0:6551->6551/tcp   k3d-dev-server
+CONTAINER ID        IMAGE                COMMAND                  CREATED             STATUS              PORTS                                                              NAMES
+32b222baaf25        rancher/k3s:v1.0.1   "/bin/k3s agent"         8 minutes ago       Up 8 minutes                                                                           k3d-dev-worker-2
+3ca00a875799        rancher/k3s:v1.0.1   "/bin/k3s agent"         8 minutes ago       Up 8 minutes                                                                           k3d-dev-worker-1
+60279aafce8d        rancher/k3s:v1.0.1   "/bin/k3s agent"         8 minutes ago       Up 8 minutes                                                                           k3d-dev-worker-0
+eb59d7980fb8        rancher/k3s:v1.0.1   "/bin/k3s server --h…"   8 minutes ago       Up 8 minutes        0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp, 0.0.0.0:6551->6551/tcp   k3d-dev-server
 ```
 
 you can also see the *Nodes* using `kubectl get nodes`
@@ -611,7 +611,7 @@ The cluster now looks like this.
 ![Service](./images/figure4.png)
 
 You may notice the *Endpoint*, just like *Deployments* create *ReplicaSets* which point at the specific *Pods*, 
-*Services* as backed by *Endpoints* which point to the *Pods*. You can see how this looks (bare in mind your output
+*Services* are backed by *Endpoints* which point to the *Pods*. You can see how this looks (bare in mind your output
 will differ).
 
 ```bash
@@ -630,12 +630,6 @@ subsets:
       targetRef:
         kind: Pod
         name: kuard-6c7b4f7bf-wrlgw
-        namespace: default
-    - ip: 10.42.3.7
-      nodeName: k3d-dev-worker-0
-      targetRef:
-        kind: Pod
-        name: kuard-6c7b4f7bf-56qfp
         namespace: default
     ports:
       - port: 8080
@@ -817,22 +811,22 @@ of different options, here we are using the `configMap`; other common options in
 for [mounting different sources into the same directory](https://kubernetes.io/docs/tasks/configure-pod-container/configure-projected-volume-storage/).
 
 Defining the *Volume* is not enough, you then need to define where it should be mounted; much like on your computer 
-when you add a new drive, it needs to be configured where it should be mounted (although this probably happens 
+when you add a new drive, it needs to be configured to define where it should be mounted (although this probably happens 
 automatically).
 
-The *Volumes* are mounted into each container which requires them, rather than simply into all containers. To do 
+The *Volumes* are mounted into each container which require them, rather than simply into all containers. To do 
 this we define an array of `VolumeMounts` on the container, each mount includes the `name` of the *Volume* we are 
 mounting and the `mountPath` to use.
 
 You may notice that we are mounting the *Volume* twice in this example. First with the `mountPath` set to `/config`, 
-this will mount the entire *ConfigMap* as a directory, which each key representing a file, and secondly we are mounting 
-with `/app/config.json` to represent a single file, here we have a `subPath` parameter which specifies which key from 
+this will mount the entire *ConfigMap* as a directory, with each key representing a file, and secondly we are mounting 
+with `/app/config.json` to represent a single file, here we have a `subPath` parameter that specifies which key from 
 the *ConfigMap* to use.
 
 Apply the manifest for the *Deployment* and we will see the result. Visit the application in your browser again and 
 select the "File System Browser" on the left hand side. You will see a listing with the content of the container's 
-file system, and if you browse around you will discovert the 2 `volumeMounts` we created, firstly the 
-directly `/config` containing all the files and secondly `/app/config.json` specifically being one of the keys. 
+file system, and if you browse around you will discover the 2 `volumeMounts` we created, firstly the 
+directory `/config` containing all the files and secondly `/app/config.json` specifically being one of the keys. 
 **WARNING** If you mount a volume to a directory `path` any existing files in that directory will be removed.
 
 Now our cluster has a state which looks like the following.
@@ -1080,7 +1074,7 @@ data:
 #### Opaque Secrets
 
 The majority of the time you will be creating opaque *Secrets*. You are probably thinking something along the lines of 
-"What? Do I need to go the the effort of base64 encoding my values all the damn time?", luckily the answer is no.
+"What? Do I need to go to the effort of base64 encoding my values all the damn time?", luckily the answer is no.
 
 There are 2 ways to go about this, the first is with a YAML file (remember though, you probably don't want to commit 
 your *Secrets* to a repository) and the second is with the command line.
@@ -1099,8 +1093,8 @@ stringData:
 ```
 
 When applying this file it will work in exactly the same way as the file with encoded data, however when you retrieve 
-the resource from the cluster you will always receive the encoded version. Note, if you supply both `data` and 
-`stringData` only the latter is used.
+the resource from the cluster you will always receive the encoded version. If you supply both `data` and  `stringData` 
+only the latter is used.
 
 The second way is using `kubectl` in much the same way it can be used to create the Docker credentials
 
@@ -1226,8 +1220,8 @@ This may sound like a lot of work, thankfully there are ways to automate this pr
 certificates can automatically be requested from [Let's Encrypt](https://letsencrypt.org) simply by creating an
 *Ingress* with an *Annotation*.
 
-We haven't talked about *Annotations* yet, like *Labels*, they are for applying metadata to a resource, however they
-are meant for programmatic usage, where as *Labels* are for humans.
+We haven't talked about *Annotations* yet. Much like *Labels*, they are for applying metadata to a resource, however
+they are meant for programmatic usage, where as *Labels* are for humans.
 
 ```yaml
 ❯ kubectl explain ingress.metadata.annotations
@@ -1269,9 +1263,9 @@ annotations:
 ```
 
 These *Annotations* are Traefik specific values (hence the prefix `traefik.ingress.kubernetes.io`), telling the
-*Ingress Controller* to accept traffic on the HTTP and HTTPS port & to redirect all traffic to the HTTPS port using a
+*Ingress Controller* to accept traffic on the HTTP and HTTPS backends & to redirect all traffic to the HTTPS port using a
 HTTP 301 redirect. More about the *Annotations* can be found in the [Traefik documentation](https://docs.traefik.io/v1.7/configuration/backends/kubernetes/#annotations)
-but again it is not essentially to read now. If you wanted the traffic on every *Ingress* to always redirect to HTTPS 
+but again it is not essential to read now. If you wanted the traffic on every *Ingress* to always redirect to HTTPS 
 you could instead do so by editing the Traefik configuration, which is stored in a *ConfigMap* in the "kube-system"
 *Namespace*, but doing so is outside of the scope of this tutorial (just remember to restart Traefik's *Pods*).
 
@@ -1441,6 +1435,8 @@ Use the following command to get the path of the directory on the *Node*.
 /var/lib/rancher/k3s/storage/pvc-14f9b407-3dff-498b-beaf-d72f9f0018e0
 ```
 
+We can these use these 2 values to create a file directly on the *Node*.
+
 ```bash
 NODE=$(kubectl get persistentvolumes -o jsonpath='{.items[0].spec.nodeAffinity.required.nodeSelectorTerms[0].matchExpressions[0].values[0]}')
 PATH=$(kubectl get persistentvolumes -o jsonpath='{.items[0].spec.hostPath.path}'
@@ -1461,7 +1457,7 @@ Let's create a file directly on the *Pod*.
 > The reason for scaling down the *Deployment* is so that we know that the *Pod* the file is created on is the same
 > one we will be directed to when using the application.
 
-Use the file browser to check the file. Now kill the *Pods* and once the new one has started browse to the two files 
+Use the file browser to check the file. Now kill the *Pod* and once the new one has started browse to the two files 
 to prove that the first file persists and the second does not.
 
 ```bash
@@ -1622,11 +1618,11 @@ Reset the number of replicas back to 1 with `kubectl`
 ❯ kubectl scale deployment/kuard --replicas=1
 ```
 
-Set the field on your *Deployment* and then apply it as usual, you will see the *Pods* created in actually the same way
+Set the field on your *Deployment* and then apply it as usual, you will see the *Pods* created in exactly the same way
 as if you had scaled using `kubectl scale`.
 
 If you want to turn off your application without deleting the resources you can set the replicas to 0, however it is
-worth nothing that if you have an *Ingress* defined any visitors will receive a "HTTP 503 Service Unavailable" 
+worth nothing that if you have an *Ingress* defined then any visitors will receive a "HTTP 503 Service Unavailable" 
 response instead of the normal "HTTP 404 Not Found" response.
 
 ### Blue-Green Deployments
@@ -1634,7 +1630,7 @@ response instead of the normal "HTTP 404 Not Found" response.
 In a production system, when you are deploying updates, you typically don't want your application to stop working whilst
 you are updating, this is known as a [Blue-Green Deployment](https://martinfowler.com/bliki/BlueGreenDeployment.html) 
 because you basically switch your "router" between 2 servers called blue and green, this is essentially how rolling
-updates works in Kubernetes.
+updates work in Kubernetes.
 
 By default *Deployments* already use rolling updates, if, for some reason you instead need all the *Pods* destroyed
 before new *Pods* are created you can set `spec.strategy` to `Recreate`.
@@ -1691,19 +1687,20 @@ To see the rolling update in action, change the image tag of the container to on
 image has these 3 tags available. If you apply the *Manifest* you will see the new *ReplicaSet* is created, with a 
 different image and the old *Pods* are destroyed whilst the new ones are created. If you try applying the *Manifest* 
 again you will see that nothing happens, this is because the cluster is already in the desired state dictated by the 
-file.
+*Manifest*.
 
 ### Resource Management
 
 In order to ensure the cluster remains responsive and stable you need to manage the resources that your applications
-can use, first you can be apply a *ResourceQuota* on a per *Namespace* basis to set aggregate limits for all *Pods*,
+can use, first you can apply a *ResourceQuota* on a per *Namespace* basis to set aggregate limits for all *Pods*,
 and more importantly you can set *ResourceRequirements* on a per container level.
 
-*ResourceRequirements* are set by providing the `resources` value on each container. There are 2 types of available; 
-`limits`, which sets the maximum resources the container may use, and `requests` which is essentially the minimum 
-resources the container requires, the *Scheduler* will use these values when scheduling your *Pods*; if you do not 
-provide `requests` it will default to the `limits`, and if you don't provide a `limits` there is no resource 
-restrictions, which is naturally a bad idea. As should be obvious, `limits` can not be lower than `requests`.
+*ResourceRequirements* are set by providing the `resources` value on each container. There are 2 types of 
+*ResourceRequirements*; `limits`, which sets the maximum resources the container may use, and `requests` which is 
+essentially the minimum resources the container requires, the *Scheduler* will use these values when scheduling your 
+*Pods*; if you do not provide `requests` it will default to the `limits`, and if you don't provide a `limits` there is 
+no resource restrictions, which is naturally a bad idea. As should be obvious, `limits` can not be lower 
+than `requests`.
 
 There are several types of resources available.
 
@@ -1718,7 +1715,7 @@ be killed with an `OOMKilled` (Out of Memory Killed) status.
 things such as logs, the `emptyDir` volume type and writable image layers. As with memory, in bytes, either
 in the standard units or binary. If a container breaches the limit the *Pod* will be evicted from the *Node*.
 
-There is also a `hugepage-*` resource type but this is quite 
+There is also a `hugepage-*` resource type but this is quite a
 [specialised resource type](https://kubernetes.io/docs/tasks/manage-hugepages/scheduling-hugepages/).
 
 Kubernetes has the ability to use extended resources for limiting the use of other resources, for
@@ -1801,7 +1798,7 @@ spec:
       image: gcr.io/kuar-demo/kuard-amd64:purple
       resources:
         requests:
-          memory: "1Ti"
+          memory: 1Ti
 ```
 
 Apply the file and you will notice the new *Pod* has a "STATUS" of Pending which never changes. 
@@ -1819,7 +1816,7 @@ Events:
 ```
 
 Exactly as you would expect! Delete the *Pod*, then edit the `memory` to a sensible value, apply the file and now 
-you will see the is *Pod* created. If you describe the *Pod* you will instead see this time that it was Scheduled,
+you will see the is *Pod* created. If you `describe` the *Pod* you will instead see this time that it was Scheduled,
 Pulled, Created and Started.
 
 > Note: The reason for deleting the *Pod* is because most fields are immutable on *Pods*, this is not a problem when
@@ -1858,11 +1855,11 @@ spec:
       image: polinux/stress
       resources:
         requests:
-          memory: "50Mi"
-          cpu: "100m"
+          memory: 50Mi
+          cpu: 100m
         limits:
-          memory: "100Mi"
-          cpu: "110m"
+          memory: 100Mi
+          cpu: 110m
       command: ["stress"]
       args: ["--vm", "10", "--vm-bytes", "250M", "--vm-hang", "1", "--vm-keep"]
 ```
