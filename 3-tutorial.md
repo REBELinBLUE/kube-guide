@@ -22,6 +22,8 @@ have installed.
 - [Creating a Deployment](#creating-a-deployment)
 - [Making Your Deployment Accessible](#making-your-deployment-accessible)
     - [Exposing Ports](#exposing-ports)
+        - [Communication in a Pod](#communication-in-a-pod)
+        - [Communication between different Pods](#communication-between-different-pods)
     - [Services](#services)
     - [Ingress](#ingress)
 - [Injecting Configuration](#injecting-configuration)
@@ -440,6 +442,8 @@ Ports are actually exposed when you build your image, using the `EXPOSE` directi
 is recommended that you provide the port specification so that other users know which ports are being exposed and so 
 that information can be discovered via the resource definition.
 
+#### Communication in a Pod
+
 Containers within a *Pod* can communicate with each other via localhost, we will now add a second container to 
 demonstrate this.
 
@@ -497,7 +501,10 @@ You can now apply the previous version of the manifest to remove the extra conta
 Pod will crash after 10 minutes as it is just running `sleep 600`; although you may want to change this value to a 
 lower value such as 10 so that can observe as the container dies and the *Pod* is restarted).
 
-Create a *Pod* for the `curl` container to show that other *Pods* are also able to communicate with it
+#### Communication between different Pods
+
+Containers in different *Pods* can communicate with each other using IP addresses, we will now add a second *Pod* to 
+demonstrate this.
 
 ```yaml
 apiVersion: v1
