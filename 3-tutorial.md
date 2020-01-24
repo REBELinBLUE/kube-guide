@@ -367,7 +367,7 @@ is set to 10.
 
 Finally, let's clean up. You can delete the resources manually, but you would need to delete the *Deployment* otherwise 
 the other restores will be recreated automatically (demonstrating again that the cluster is self healing). Try deleting 
-the *ReplicaSet* to see that is it recreated, along with a new *Pod*, this shows that the *Controllers* are working 
+the *ReplicaSet* to see that it is recreated, along with a new *Pod*, this shows that the *Controllers* are working 
 as previously described.
 
 The cluster will now looks like the following. (Note: After this point the old *ReplicaSets* won't be included in 
