@@ -370,7 +370,7 @@ the other restores will be recreated automatically (demonstrating again that the
 the *ReplicaSet* to see that it is recreated, along with a new *Pod*, this shows that the *Controllers* are working 
 as previously described.
 
-The cluster will now looks like the following. (Note: After this point the old *ReplicaSets* won't be included in 
+The cluster will now look like the following. (Note: After this point the old *ReplicaSets* won't be included in 
 these diagrams).
 
 ![Deployment with 2 ReplicaSets](./images/figure3.png)
