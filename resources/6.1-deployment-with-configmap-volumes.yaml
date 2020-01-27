@@ -29,12 +29,3 @@ spec:
             - name: config-volume
               mountPath: /app/config.json
               subPath: kuard.json
-          env:
-            - name: A_SUPER_SECRET_TOKEN
-              valueFrom:
-                configMapKeyRef:
-                  name: kuard
-                  key: token
-          command:
-            - "/kuard"
-            - "$(A_SUPER_SECRET_TOKEN)"

@@ -1230,7 +1230,7 @@ certificates can automatically be requested from [Let's Encrypt](https://letsenc
 We haven't talked about *Annotations* yet. Much like *Labels*, they are for applying metadata to a resource, however
 they are meant for programmatic usage, where as *Labels* are for humans.
 
-```yaml
+```bash
 ❯ kubectl explain ingress.metadata.annotations
 KIND:     Ingress
 VERSION:  extensions/v1beta1
@@ -1485,7 +1485,7 @@ In order to keep the application running smoothly, there are a few more steps wh
 
 Before that though, let's prove that Kubernetes is self healing and is able to recover from a *Node* disappearing.
 
-Edit the *Deployment* to look like the following.
+Create the file `9-deployment-with-tolerations.yaml` with the following content.
 
 ```yaml
 apiVersion: apps/v1
@@ -1560,7 +1560,10 @@ want to cancel the `watch` command on the second terminal and rerun it with just
 only resources we care about from this point onwards.
 
 ```bash
-❯ kubectl get nodes,pod,deploy,rs -o wide
+❯ kubectl apply -f 9-deployment-with-tolerations.yaml
+deployment.apps/kuard configured
+
+❯ watch kubectl get nodes,pod,deploy,rs -o wide
 ```
 
 Scale to 3 replicas also

@@ -13,7 +13,6 @@ data:
   kuard.json: |
     {
       "foo": "bar",
-      "baz": "qux",
-      "bar": "foo"
+      "baz": "qux"
     }
   token: my-api-token

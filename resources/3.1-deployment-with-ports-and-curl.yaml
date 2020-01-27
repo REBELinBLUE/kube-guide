@@ -14,6 +14,13 @@ spec:
         app: kuard
     spec:
       containers:
+        - name: curl
+          image: appropriate/curl
+          command:
+            - sh
+          args:
+            - -c
+            - sleep 600
         - name: kuard
           image: gcr.io/kuar-demo/kuard-amd64:purple
           ports:

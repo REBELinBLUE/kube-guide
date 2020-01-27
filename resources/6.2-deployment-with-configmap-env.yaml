@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kuard
+  labels:
+    app: kuard
 spec:
   selector:
     matchLabels:
@@ -11,22 +13,18 @@ spec:
       labels:
         app: kuard
     spec:
-      volumes:
-        - name: secret-volumne
-          secret:
-            secretName: kuard
       containers:
         - name: kuard
           image: gcr.io/kuar-demo/kuard-amd64:purple
           ports:
             - name: http
               containerPort: 8080
-          volumeMounts:
-            - name: secret-volumne
-              mountPath: /secrets
           env:
-            - name: A_SECRET_PASSWORD
+            - name: A_SUPER_SECRET_TOKEN
               valueFrom:
-                secretKeyRef:
+                configMapKeyRef:
                   name: kuard
-                  key: password
+                  key: token
+          command:
+            - "/kuard"
+            - "$(A_SUPER_SECRET_TOKEN)"
