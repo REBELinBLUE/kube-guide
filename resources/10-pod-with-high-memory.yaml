@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: limit-test
+spec:
+  containers:
+    - name: kuard
+      image: gcr.io/kuar-demo/kuard-amd64:purple
+      resources:
+        requests:
+          memory: 1Ti

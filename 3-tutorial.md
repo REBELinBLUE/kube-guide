@@ -1794,8 +1794,8 @@ Shut down 2 of the *Nodes*
 ❯ docker stop k3d-dev-worker-1 k3d-dev-worker-2
 ```
 
-Create a *Pod* with a container which has a `resources.requests.memory` more than your capacity, for example
-1Ti, so that it looks something like the following
+Create a file `10-pod-with-high-memory.yaml` containing a *Pod* with a container which has a 
+`resources.requests.memory` more than your capacity, for example 1Ti, so that it looks something like the following
 
 ```yaml
 apiVersion: v1
@@ -1851,8 +1851,8 @@ FIXME: Add a test for ephemeral-storage
 
 We are now going to make the *Pod* run a stress test to use up the available memory.
 
-Delete the *Pod* and then edit the *Manifest* to look something like the following, set the `resources.requests` to 
-sensible values and set the `resources.limits` higher but not too high.
+Delete the *Pod* and then create a new *Manifest* called `11-pod-with-low-memory.yaml` which looks something like the 
+following, set the `resources.requests` to sensible values and set the `resources.limits` higher but not too high.
 
 ```yaml
 apiVersion: v1
@@ -1904,8 +1904,7 @@ pod "limit-test" deleted
 ❯ docker start k3d-dev-worker-1 k3d-dev-worker-2
 ```
 
-Update the *Deployment* with sensible *ResourceRequirements*, then apply it. The *Manifest* now looks something 
-like the following
+Create the file `13-deployment-with-resources.yaml` with sensible *ResourceRequirements*, then apply it. 
 
 ```yaml
 apiVersion: apps/v1
@@ -1963,6 +1962,60 @@ spec:
 ```
 
 ### Health Checks
+
+The final step to make sure your application is resilient is to add health checks to your *Deployment*. Kubernetes 
+has 3 types of health checks, known as *probes* which are supplied on a per container basis. These *probes* are
+performed by *Kubelet*. If any particular *probe* is not provided they are always considered successful.
+
+- `LivenessProbe` - Checks that the application is live, if it fails the container is killed and restarted depending 
+upon the *Pods* `spec.restartPolicy`.
+- `ReadinessProbe` - For checking that the application is able to receive traffic, if not it is removed from 
+the *Endpoint* created by any *Service* pointing to the *Pod* and re-added when the probe is successful.
+- `StartupProbe` - Normally not used as the `LivenessProbe` generally does the same thing, but if your application 
+takes a long time to startup the `LivenessProbe` may not be suitable as you would need to increase the failure 
+threshold to a value which would be unsuitable for checking liveness once the application is running. If the *probe* 
+fails the container is restarted. The other 2 *probes* do not run until this probe has been successful.
+
+Each of the *probes* can perform one of 3 different tests.
+
+- `httpGet` - Perform a HTTP GET request to check the health of the container, considered successful if the response 
+code is in the 2xx or 3xx range.
+- `tcpSocket` - Opens a socket connection to a supplied port, considered successful if the port is open.
+- `exec` - Executes a command in the container, considered successful if the command exits with the 0 exit code.
+
+Each of these probes have different options, use the `kubectl explain` command to see the options.
+
+```bash
+❯ kubectl explain deployment.spec.template.spec.containers.livenessProbe.httpGet
+KIND:     Deployment
+VERSION:  apps/v1
+
+RESOURCE: httpGet <Object>
+
+DESCRIPTION:
+     HTTPGet specifies the http request to perform.
+
+     HTTPGetAction describes an action based on HTTP Get requests.
+
+FIELDS:
+   host	<string>
+     Host name to connect to, defaults to the pod IP. You probably want to set
+     "Host" in httpHeaders instead.
+
+   httpHeaders	<[]Object>
+     Custom headers to set in the request. HTTP allows repeated headers.
+
+   path	<string>
+     Path to access on the HTTP server.
+
+   port	<string> -required-
+     Name or number of the port to access on the container. Number must be in
+     the range 1 to 65535. Name must be an IANA_SVC_NAME.
+
+   scheme	<string>
+     Scheme to use for connecting to the host. Defaults to HTTP.
+```
+
 
 ## Summary
 
