@@ -810,7 +810,7 @@ spec:
 ```
 
 There are several new things here, firstly you will notice `spec.template.spec.volumes` which is an array of *Volumes* 
-which will be available for the containers to mount. The `name` field is compulsory but after that the remaining 
+which will be available for the containers to mount. The `name` field is required but after that the remaining 
 fields depend on the type of *Volume*. If you use the `kubectl explain` command you will notice that there are a lot 
 of different options, here we are using the `configMap`; other common options include `secret`, 
 `persistentVolumeClaim`, `emptyDir`, `hostPath` (for mounting a path from the physical host) and even 
