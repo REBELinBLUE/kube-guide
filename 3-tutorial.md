@@ -818,8 +818,8 @@ of different options, here we are using the `configMap`; other common options in
 for [mounting different sources into the same directory](https://kubernetes.io/docs/tasks/configure-pod-container/configure-projected-volume-storage/).
 
 Defining the *Volume* is not enough, you then need to define where it should be mounted; much like on your computer 
-when you add a new drive, it needs to be configured to define where it should be mounted (although this probably happens 
-automatically).
+when you add a new drive, it needs to be configured to define where it should be mounted (although this probably 
+happens automatically).
 
 The *Volumes* are mounted into each container which require them, rather than simply into all containers. To do 
 this we define an array of `VolumeMounts` on the container, each mount includes the `name` of the *Volume* we are 
@@ -2165,9 +2165,10 @@ again, you will see that the application keeps working even when the *probes* ar
 Note: When you use the probe pages you will see inconsistent results as you will be making requests to, and receiving 
 responses from, different *Pods* each request. You may be wondering if there is a way to ensure all requests from a 
 single user goes to the same *Pod*, for example if you have PHP sessions? Normally you would not want to do this as 
-it would typically be better to handle this at the application level, for example using a database or [memcached](https://memcached.org) 
-instance to store sessions; however you can use the *Service* `spec.sessionAffinity` field to do this but 
-"sticky sessions" are a violation of [The Twelve Factor App](https://12factor.net/processes).
+it would typically be better to handle this at the application level, for example using a database or 
+[memcached](https://memcached.org) instance to store sessions; however you can use the *Service* 
+`spec.sessionAffinity` field to do this but "sticky sessions" are a violation of 
+[The Twelve Factor App](https://12factor.net/processes).
 
 ## Summary
 
