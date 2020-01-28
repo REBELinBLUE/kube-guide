@@ -82,3 +82,4 @@
         - [Resource Management](./3-tutorial.md#resource-management)
         - [Health Checks](./3-tutorial.md#health-checks)
     - [Summary](./3-tutorial.md#summary)
+- [Extended Tutorial](./4-extended-tutorial.md)
