@@ -28,22 +28,6 @@ spec:
             claimName: kuard
       containers:
         - name: kuard
-          livenessProbe:
-            httpGet:
-              path: /healthy
-              port: 8080
-            initialDelaySeconds: 5 # Wait before first probe
-            timeoutSeconds: 1 # Maximum time to wait for probe
-            periodSeconds: 10 # How often to perform probe
-            failureThreshold: 3 # Number of consecutive failures before killing the pod
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: 8080
-            initialDelaySeconds: 30
-            timeoutSeconds: 1
-            periodSeconds: 10
-            failureThreshold: 3
           image: gcr.io/kuar-demo/kuard-amd64:purple
           ports:
             - name: http
@@ -66,3 +50,19 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: 8080
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3

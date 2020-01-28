@@ -617,7 +617,7 @@ The cluster now looks like this.
 
 ![Service](./images/figure4.png)
 
-You may notice the *Endpoint*, just like *Deployments* create *ReplicaSets* which point at the specific *Pods*, 
+You may notice the *Endpoints*, just like *Deployments* create *ReplicaSets* which point at the specific *Pods*, 
 *Services* are backed by *Endpoints* which point to the *Pods*. You can see how this looks (bear in mind your output
 will differ).
 
@@ -1171,7 +1171,7 @@ spec:
                   key: secret-password
 ```
 
-Apply the *Manifest* and then visit the "Server Env" page again, you should see the *Secret* has been decoded from 
+Apply the manifest and then visit the "Server Env" page again, you should see the *Secret* has been decoded from 
 base64 and injected into the container.
 
 ![Server Env Variables - Showing Secret](./images/browser3.png)
@@ -1357,7 +1357,7 @@ You will notice that the "STATUS" of the claim is Pending, and it will stay like
 
 Now it is time to consume the *PersistentVolumeClaim*, see if you can figure this out yourself, update your 
 *Deployment*, remembering you need to add the *Volume*, and then mount it into the container, you can use this 
-command `kubectl explain deployment.spec.template.spec.volumes` for help. The expected *Manifest* will look something 
+command `kubectl explain deployment.spec.template.spec.volumes` for help. The expected manifest will look something 
 like the following.
 
 ```yaml
@@ -1544,7 +1544,7 @@ Kubernetes has a featured known as [Taint Based Evictions](https://kubernetes.io
 unhealthy. For example, if the *Node* becomes unreachable the taint `node.kubernetes.io/unreachable` is added to it, by
 default Kubernetes will *tolerate* these *taints* for 300 seconds, however for testing purposes we have set it 
 to 5 seconds. In a production real cluster you almost certainly don't want to change this so you can leave 
-the `tolerations` out of the *Manifest*. 
+the `tolerations` out of the manifest. 
 
 *Taints* have 3 effects, `NoSchedule` which means the *Pod* should never be scheduled on the *Node*, however 
 if the *taint* is added after it is already scheduled the *Pod* will not be evicted, `PreferNoSchedule` which means 
@@ -1555,7 +1555,7 @@ So in the *Deployment* we have said that we can *tolerate* the *taints* `node.ku
 `node.kubernetes.io/not-ready` with an effect of `NoExecute` for 5 seconds, after which time the *Pod* will be evicted 
 from the tainted *Node* and the *ReplicaSet* will result in it being rescheduled on a healthy *Node*.
 
-So now that we have explained *taints* and *tolerations*, apply the *Manifest* with `kubectl`. You may also 
+So now that we have explained *taints* and *tolerations*, apply the manifest with `kubectl`. You may also 
 want to cancel the `watch` command on the second terminal and rerun it with just the following as these are the 
 only resources we care about from this point onwards.
 
@@ -1607,7 +1607,7 @@ When running an application on a production cluster you want to run at least 3 r
 ensures that if a *Node* goes down you still have a fallback until a new *Pod* is scheduled.
 
 Previously we set the number of replicas using `kubectl`, however this is not the best way to do it, as in reality
-you would want it defined in your *Manifest* (which you are of course storing in a version control system, right?).
+you would want it defined in your manifest (which you are of course storing in a version control system, right?).
 Thankfully it is just a case of setting one field
 
 ```bash
@@ -1694,10 +1694,10 @@ there are only 2 running until another has fully started.
 Try playing with these values and setting `spec.strategy` to "Recreate" to see how they work.
 
 To see the rolling update in action, change the image tag of the container to one of `purple`, `blue` or `green`, the
-image has these 3 tags available. If you apply the *Manifest* you will see the new *ReplicaSet* is created, with a 
-different image and the old *Pods* are destroyed whilst the new ones are created. If you try applying the *Manifest* 
+image has these 3 tags available. If you apply the manifest you will see the new *ReplicaSet* is created, with a 
+different image and the old *Pods* are destroyed whilst the new ones are created. If you try applying the manifest 
 again you will see that nothing happens, this is because the cluster is already in the desired state dictated by the 
-*Manifest*.
+manifest.
 
 ### Resource Management
 
@@ -1851,7 +1851,7 @@ FIXME: Add a test for ephemeral-storage
 
 We are now going to make the *Pod* run a stress test to use up the available memory.
 
-Delete the *Pod* and then create a new *Manifest* called `11-pod-with-low-memory.yaml` which looks something like the 
+Delete the *Pod* and then create a new manifest called `11-pod-with-low-memory.yaml` which looks something like the 
 following, set the `resources.requests` to sensible values and set the `resources.limits` higher but not too high.
 
 ```yaml
@@ -1874,7 +1874,7 @@ spec:
       args: ["--vm", "10", "--vm-bytes", "250M", "--vm-hang", "1", "--vm-keep"]
 ```
 
-Apply the *Manifest*, the *Pod* will start and it will start using up more memory. You should soon see the *Pod* status 
+Apply the manifest, the *Pod* will start and it will start using up more memory. You should soon see the *Pod* status 
 change to "OOMKilled", the container will restart a few times and eventually the *Pod* ends up with a status of 
 "CrashLoopBack" (this is because our *Pod* is crashing quickly and often, normally it would just restart). Describe 
 the *Pod* and you will see it is being killed because it is out of memory.
@@ -1970,7 +1970,7 @@ performed by *Kubelet*. If any particular *probe* is not provided they are alway
 - `LivenessProbe` - Checks that the application is live, if it fails the container is killed and restarted depending 
 upon the *Pods* `spec.restartPolicy`.
 - `ReadinessProbe` - For checking that the application is able to receive traffic, if not it is removed from 
-the *Endpoint* created by any *Service* pointing to the *Pod* and re-added when the probe is successful.
+the *Endpoints* created by any *Service* pointing to the *Pod* and re-added when the probe is successful.
 - `StartupProbe` - Normally not used as the `LivenessProbe` generally does the same thing, but if your application 
 takes a long time to startup the `LivenessProbe` may not be suitable as you would need to increase the failure 
 threshold to a value which would be unsuitable for checking liveness once the application is running. If the *probe* 
@@ -2016,6 +2016,158 @@ FIELDS:
      Scheme to use for connecting to the host. Defaults to HTTP.
 ```
 
+Create the file `14-deployment-with-probes.yaml` with the following content.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuard
+  labels:
+    app: kuard
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: kuard
+  template:
+    metadata:
+      labels:
+        app: kuard
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kuard
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: kuard
+      containers:
+        - name: kuard
+          image: gcr.io/kuar-demo/kuard-amd64:purple
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: data-volume
+              mountPath: /data
+          env:
+            - name: A_SECRET_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kuard
+                  key: secret-password
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+```
+
+Here we add 2 *probes*, a *livenessProbe* which makes a request to `/healthy` and a *readinessProbe* which makes a 
+request to `/ready`. 
+
+There are a couple of options here also.
+
+- `initialDelaySeconds` - sets how long after the container starts before the probe begins
+- `failureThreshold` - sets how many failures there can be before the probe is actually considered a failure
+- `periodSeconds` - sets how often to run the probe.
+
+Each of these values have different defaults and there are a few more options, see the `kubectl explain` command 
+for more information; the reason for including them here is to demonstrate when you would want to include a 
+`startupProbe`.
+
+If your container would normally take longer than the following parameters from the `livenessProbe` to start, you
+should define a `startupProbe` as well using the same test as the `livenessProbe`, then increase the `failureThreshold`.
+
+> initialDelaySeconds + failureThreshold × periodSeconds
+
+Note: The number of replicas have been reduced to 1 to make testing easier.
+
+Apply the manifest file and then visit the application in your browser.
+
+On the left hand side select the "Liveness Probe" menu option. You will see the application showing the probes as they
+happen, and at the top of the page, options like the following.
+
+![Probe Options](./images/options.png)
+
+Select the "Fail" option to set the probe so that it always fails. Since we have the `livenessProbe.failureThreshold` 
+set to 3 you will see the first 2 requests in the log with a status of 500, after this point the third probe will fail
+10 seconds later. If you watch the *Pod* in your second terminal you will see it restarting and the restart count 
+will increase. The *Pod* will have also been removed from the *Endpoints* but since it will restart quickly this may be
+hard to demonstrate, so instead we will prove this with the *readinessProbe*.
+
+Now visit the "Readiness Probe" page. If you select the "Fail" option the *Pod* will start to fail, but it will never
+automatically restart because the `readinessProbe` just removed the *Pod* from the *Endpoints* for the *Service*; for 
+this reason you should use something like [Prometheus](https://prometheus.io) (discussed in a later chapter) to alert 
+you to *Pods* which are not ready.
+
+Instead, select the "10" option. Wait until the 3rd probe and the *Endpoints* will be removed from the *Service* 
+so it will no longer work as there is only 1 replica. You'll notice that the "READY" value of the *Pod* has changed to
+`0/1`.
+
+Retrieve the *Endpoints* using `kubectl` and you will see that the *Pod* is now in `subsets.notReadyAddresses`. This 
+means that the *Service* will no longer point to the not ready *Pod*.
+
+```bash
+❯ kubectl get endpoints/kuard -o yaml
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: kuard
+  namespace: default
+  labels:
+    app: kuard
+subsets:
+- notReadyAddresses:
+  - ip: 10.42.0.6
+    nodeName: k3d-dev-worker-0
+    targetRef:
+      kind: Pod
+      name: kuard-6fc5cb67d6-mnqb8
+      namespace: default
+  ports:
+  - port: 8080
+    protocol: TCP
+```
+
+If you try to reload the page you'll get "Service Unavailable". Wait for a while (since we have set it to fail for 10
+probes it'll be another 70 seconds) and the "STATUS" will change back to `1/1`, if you examine the *Endpoints* you will
+see that it has been removed from `subsets.notReadyAddresses` and moved back to `subsets.addresses`, the page will 
+then load again.
+
+Obviously you wouldn't really be running with 1 *replica*, so increase to 3 *replicas* and try the various options 
+again, you will see that the application keeps working even when the *probes* are failing on a particular *Pod*.
+
+Note: When you use the probe pages you will see inconsistent results as you will be making requests to, and receiving 
+responses from, different *Pods* each request. You may be wondering if there is a way to ensure all requests from a 
+single user goes to the same *Pod*, for example if you have PHP sessions? Normally you would not want to do this as 
+it would typically be better to handle this at the application level, for example using a database or [memcached](https://memcached.org) 
+instance to store sessions; however you can use the *Service* `spec.sessionAffinity` field to do this but 
+"sticky sessions" are a violation of [The Twelve Factor App](https://12factor.net/processes).
 
 ## Summary
 

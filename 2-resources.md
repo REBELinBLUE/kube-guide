@@ -258,9 +258,9 @@ implementation is used, can do things like authentication, IP whitelisting, requ
 
 ### Endpoints
 
-![Endpoint Icon](./images/icons/resources/ep-128.png)
+![Endpoints Icon](./images/icons/resources/ep-128.png)
 
-The *Endpoint* is a collection of addresses which implement the actual *Service*; you never need to create these 
+The *Endpoints* is a collection of addresses which implement the actual *Service*; you never need to create these 
 directly as they are created automatically when a *Service* is created.
 
 ## Storage
