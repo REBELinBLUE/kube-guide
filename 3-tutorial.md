@@ -23,7 +23,7 @@ have installed.
 - [Making Your Deployment Accessible](#making-your-deployment-accessible)
     - [Exposing Ports](#exposing-ports)
         - [Communication within a Pod](#communication-within-a-pod)
-        - [Communication between different Pods](#communication-between-different-pods)
+        - [Communication between Pods](#communication-between-pods)
     - [Services](#services)
     - [Ingress](#ingress)
 - [Injecting Configuration](#injecting-configuration)
@@ -501,7 +501,7 @@ You can now apply the previous version of the manifest to remove the extra conta
 Pod will crash after 10 minutes as it is just running `sleep 600`; although you may want to change this value to a 
 lower value such as 10 so that can observe as the container dies and the *Pod* is restarted).
 
-#### Communication between different Pods
+#### Communication between Pods
 
 Containers in different *Pods* can communicate with each other using IP addresses, we will now add a second *Pod* to 
 demonstrate this.
