@@ -997,7 +997,7 @@ certificate.
 Now, to actually create a Kubernetes *Secret* you use the following command
 
 ```bash
-❯ kubectl create secret tls kuard-tls --cert=tls.cert --key=tls.key
+❯ kubectl create secret tls kuard-tls --cert=tls.crt --key=tls.key
 secret/kuard-tls created
 ```
 
