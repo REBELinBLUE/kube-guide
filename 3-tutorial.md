@@ -622,7 +622,7 @@ You may notice the *Endpoint*, just like *Deployments* create *ReplicaSets* whic
 will differ).
 
 ```bash
-❯ kubectl get endpoints kuard -o yaml
+❯ kubectl get endpoints/kuard -o yaml
 apiVersion: v1
 kind: Endpoints
 metadata:
