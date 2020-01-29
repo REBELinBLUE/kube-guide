@@ -702,6 +702,7 @@ spec:
               subPath: kuard.json
 ```
 
+<<<<<<< HEAD:manuscript/3-tutorial.md
 <<<<<<< HEAD:3-tutorial.md
 There are several new things here, firstly you will notice `spec.template.spec.volumes` which is an array of *Volumes* 
 which will be available for the containers to mount. The `name` field is required but after that the remaining 
@@ -710,9 +711,7 @@ of different options, here we are using the `configMap`; other common options in
 `persistentVolumeClaim`, `emptyDir`, `hostPath` (for mounting a path from the physical host) and even 
 `downwardAPI` (for mounting a file containing metadata about the *Pod*), there is also `projected` type 
 for [mounting different sources into the same directory](https://kubernetes.io/docs/tasks/configure-pod-container/configure-projected-volume-storage/).
-=======
 There are several new things here, firstly you will notice `spec.template.spec.volumes` which is an array of *Volumes* which will be available for the containers to mount. The `name` field is compulsory but after that the remaining fields depend on the type of *Volume*. If you use the `kubectl explain` command you will notice that there are a lot of different options, here we are using the `configMap`; other common options include `secret`, `persistentVolumeClaim`, `emptyDir`, `hostPath` (for mounting a path from the physical host) and even `downwardAPI` (for mounting a file containing metadata about the *Pod*), there is also `projected` type for [mounting different sources into the same directory](https://kubernetes.io/docs/tasks/configure-pod-container/configure-projected-volume-storage/).
->>>>>>> Clean up to work on leanpub:manuscript/3-tutorial.md
 
 Defining the *Volume* is not enough, you then need to define where it should be mounted; much like on your computer when you add a new drive, it needs to be configured to define where it should be mounted (although this probably happens automatically).
 
