@@ -424,7 +424,7 @@ Now apply the file `kubectl apply -f 3-container-with-ports.yaml`. Once the *Pod
 
 As you can see, the `curl` container (specified by the `-c curl`) is able to communicate with the `kuard` container. You can now apply the previous version of the manifest to remove the extra container (you should do this otherwise the Pod will crash after 10 minutes as it is just running `sleep 600`; although you may want to change this value to a lower value such as 10 so that can observe as the container dies and the *Pod* is restarted).
 
-#### Communication between different Pods
+#### Communication between Pods
 
 Containers in different *Pods* can communicate with each other using IP addresses, we will now add a second *Pod* to demonstrate this.
 
@@ -530,7 +530,7 @@ The cluster now looks like this.
 You may notice the *Endpoints*, just like *Deployments* create *ReplicaSets* which point at the specific *Pods*, *Services* are backed by *Endpoints* which point to the *Pods*. You can see how this looks (bear in mind your output will differ).
 
 ```bash
-❯ kubectl get endpoint kuard -o yaml
+❯ kubectl get endpoints/kuard -o yaml
 apiVersion: v1
 kind: Endpoints
 metadata:
@@ -702,7 +702,7 @@ spec:
               subPath: kuard.json
 ```
 
-There are several new things here, firstly you will notice `spec.template.spec.volumes` which is an array of *Volumes* which will be available for the containers to mount. The `name` field is compulsory but after that the remaining fields depend on the type of *Volume*. If you use the `kubectl explain` command you will notice that there are a lot of different options, here we are using the `configMap`; other common options include `secret`, `persistentVolumeClaim`, `emptyDir`, `hostPath` (for mounting a path from the physical host) and even `downwardAPI` (for mounting a file containing metadata about the *Pod*), there is also `projected` type for [mounting different sources into the same directory](https://kubernetes.io/docs/tasks/configure-pod-container/configure-projected-volume-storage/).
+There are several new things here, firstly you will notice `spec.template.spec.volumes` which is an array of *Volumes* which will be available for the containers to mount. The `name` field is required but after that the remaining fields depend on the type of *Volume*. If you use the `kubectl explain` command you will notice that there are a lot of different options, here we are using the `configMap`; other common options include `secret`, `persistentVolumeClaim`, `emptyDir`, `hostPath` (for mounting a path from the physical host) and even `downwardAPI` (for mounting a file containing metadata about the *Pod*), there is also `projected` type for [mounting different sources into the same directory](https://kubernetes.io/docs/tasks/configure-pod-container/configure-projected-volume-storage/).
 
 Defining the *Volume* is not enough, you then need to define where it should be mounted; much like on your computer when you add a new drive, it needs to be configured to define where it should be mounted (although this probably happens automatically).
 
