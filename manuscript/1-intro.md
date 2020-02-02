@@ -1,6 +1,6 @@
 # An introduction to Kubernetes
 
-This document provides you with an introduction to Kubernetes, it will introduce you to the components, explain how they fit together, introduce you to many of the core resource concepts and then provide you with a tutorial you can follow through yourself to get a grasp on theses concepts.
+This guide provides you with an introduction to Kubernetes, it will introduce you to the components, explain how they fit together, introduce you to many of the core resource concepts and then provide you with a tutorial you can follow through yourself to get a grasp on theses concepts.
 
 Kubernetes, often abbreviated as K8S, is an orchestration service, designed by Google, for managing distributed systems. Although you can run it on bare metal, the preferred way is using one of the various cloud providers; Kubernetes will take care of provisioning hardware, allowing you to use all available hardware resources as if it were one giant computer. By specifying the resources required by your application Kubernetes will take care of scheduling them to run on hardware with the appropriate resources available.
 
@@ -32,17 +32,17 @@ The architecture of the control plane is shown below.
 
 ![etcd Icon](resources/images/icons/infrastructure_components/etcd-128.png)
 
-The configuration of the cluster is stored as *resource definitions*, this configuration is stored in an etcd cluster. etcd is a strong consistency, high availability, key-value store; it takes care of replicating the state amongst all members of the cluster and resolving conflicts between them. It stored the *desired state* of the cluster and is the *source of truth*.
+The configuration of the cluster is stored as *resource definitions*, this configuration is stored in an etcd cluster. etcd is a strong consistency, high availability, key-value store; it takes care of replicating the state amongst all members of the cluster and resolving conflicts between them. It stores the *desired state* of the cluster and is the *source of truth*.
 
 Although it is a central component of the cluster, you as the operator, and other processes, will never talk to etcd directly. Only one component talks to etcd, that is the API Server.
 
-etcd is not specific to Kubernetes, you can use it for other things (although not the instance used for Kubernetes), so you can [find out more about it on the website](https://etcd.io).
+etcd is not specific to Kubernetes, you can use it for other things (although you should avoid reusing the instance used for Kubernetes), so you can [find out more about it on the website](https://etcd.io).
 
 #### API Server
 
 ![API Server Icon](resources/images/icons/control_plane_components/api-128.png)
 
-The *API Server* is the internal event router for Kubernetes. It is the only component which can directly access *etcd* to store and retrieve resource definitions. It is also the proxy between the command line interface, *kubectl* and the cluster. The CLI talks to the *API Server* exclusively, as do all the other components. The *API Server* simply returns the information from, and stores information in *etcd*; it does nothing else, actually working out what to do is down to other components. It is a stateless component so scales well, typically it would be deployed on the same servers as *etcd*. The *API Server* accepts requests in JSON format.
+The *API Server* is the internal event router for Kubernetes. It is the only component which can directly access *etcd* to store and retrieve resource definitions. It is also the proxy between the command line interface, *kubectl*, and the cluster. The CLI talks to the *API Server* exclusively, as do all the other components. The *API Server* simply returns the information from, and stores information in *etcd*; it does nothing else, actually working out what to do is down to other components. It is a stateless component so scales well, typically it would be deployed on the same servers as *etcd*. The *API Server* accepts requests in JSON format.
 
 #### Scheduler
 
@@ -56,7 +56,7 @@ The *Scheduler* should be deployed redundantly on all the control plane *Nodes*,
 
 ![Kube-Controller Manager Icon](resources/images/icons/control_plane_components/c-m-128.png)
 
-This is the main binary which was mentioned earlier, it is made up of a series of *Controllers*; although they can actually be run seperately, they are typically run as a single binary. While the *Scheduler* takes care of placing *Pods*, the *Controllers* take care of almost everything else. There are a variety of *Controllers*, typically one for each resource, such as the *Deployment Controller*, *StatefulSet Controller*, *Namespace Controller*, *ServiceAccount Controller*, *Job Controller* and a *Pod Garbage Collector Controller*. These are just some of the built-in controllers, but it is actually possible to create custom controllers yourself if you are willing to write some code. There are some *Controllers* you are expected to provide yourself, for instance, although Kubernetes has the concept of an *Ingress* it does not include an *Ingress Controller*.
+This is the main binary which was mentioned earlier, it is made up of a series of *Controllers*; although they can actually be run separately, they are typically run as a single binary. While the *Scheduler* takes care of placing *Pods*, the *Controllers* take care of almost everything else. There are a variety of *Controllers*, typically one for each resource, such as the *Deployment Controller*, *StatefulSet Controller*, *Namespace Controller*, *ServiceAccount Controller*, *Job Controller* and a *Pod Garbage Collector Controller*. These are just some of the built-in controllers, but it is actually possible to create custom controllers yourself if you are willing to write some code. There are some *Controllers* you are expected to provide yourself, for instance, although Kubernetes has the concept of an *Ingress* it does not include an *Ingress Controller*.
 
 Like the *Scheduler*, the *Controllers* are deployed redundantly and elect a master.
 
