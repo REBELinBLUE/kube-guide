@@ -61,7 +61,7 @@ Whilst you would normally be deploying stateless applications, there are times w
 
 This means that *StatefulSets* perform updates in a different manner to *Deployments* if you change the image then *Pods* need to be destroyed and recreated in order.
 
-Data would be stored in a *PersistentVolume* (more on those later), however, unlike *StatefulSets* you would have a *Volume* for each *Pod* rather than sharing it between pods. You would typically use *StatefulSets* for things such as [redis](https://redis.io), [etcd](https://etcd.io) or [rabbitmq](https://www.rabbitmq.com), replicating data is down to the individual application.
+Data would be stored in a *PersistentVolume* (more on those later), however, unlike with *ReplicaSets* you would have a *Volume* for each *Pod* rather than sharing it between pods. You would typically use *StatefulSets* for things such as [redis](https://redis.io), [etcd](https://etcd.io) or [rabbitmq](https://www.rabbitmq.com), replicating data is down to the individual application.
 
 ### DaemonSet
 
@@ -181,7 +181,7 @@ A *Volume* is a component of a *Pod* rather than an independent resource. It is 
 
 ## Other Resources
 
-There are many other resource types which you may hear talked about, along with the *CustomResourceDefinitions* provided by many applications. A few of the more common ones are briefly explained below, see the [Kubernetes documentation](https://kubernetes.io/docs/concepts/) for a full explanation.
+There are many other resource types which you may hear talked about, along with the *CustomResourceDefinitions* provided by many applications. These are briefly explained below, see the [Kubernetes documentation](https://kubernetes.io/docs/concepts/) for a full explanation.
 
 ### ServiceAccount
 
