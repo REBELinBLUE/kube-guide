@@ -76,3 +76,5 @@ deployment.apps/kuard image updated
 More useful though is `kubectl patch`, this allows you to patch any resource using YAML or JSON. 
 
 For the following examples you need the [jq](https://stedolan.github.io/jq/) command installed, it is available via [brew](https://brew.sh) if you are using a Mac.
+
+Kl;jnsdfghiojnaaspwedbg

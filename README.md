@@ -9,6 +9,10 @@
 - Useful Tools
 - [Full Table of Contents](./toc.md)
 
+## Attributions
+
+[Official Kubernetes Icons](https://github.com/kubernetes/community/tree/master/icons) / [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
 ## Other Useful Resources
 
 - [Kubernetes the Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way) - A tutorial from Kelsey Hightower on bootstraping a cluster completely from scratch without any scripts, very useful if you want to learn exactly how everything fits together.
