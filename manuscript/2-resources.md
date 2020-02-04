@@ -61,13 +61,13 @@ Whilst you would normally be deploying stateless applications, there are times w
 
 This means that *StatefulSets* perform updates in a different manner to *Deployments* if you change the image then *Pods* need to be destroyed and recreated in order.
 
-Data would be stored in a *PersistentVolume* (more on those later), however, unlike with *ReplicaSets* you would have a *Volume* for each *Pod* rather than sharing it between pods. You would typically use *StatefulSets* for things such as [redis](https://redis.io), [etcd](https://etcd.io) or [rabbitmq](https://www.rabbitmq.com), replicating data is down to the individual application.
+Data would be stored in a *PersistentVolume* (more on those later), however, unlike with *ReplicaSets* you would have a *Volume* for each *Pod* rather than sharing it between *Pods*. You would typically use *StatefulSets* for things such as [redis](https://redis.io), [etcd](https://etcd.io) or [rabbitmq](https://www.rabbitmq.com), replicating data is down to the individual application.
 
 ### DaemonSet
 
 ![DaemonSet Icon](resources/images/icons/resources/ds-128.png)
 
-DaemonSets are for *Pods* which should run on every *Node* (or every *Node* matching a specified criteria) instead of scaling to a number of replicas; when new *Nodes* are added to the cluster a new *Pod* from the *DaemonSet* would be scheduled on that *Node*. This is typically used for ongoing background processes such as monitoring and log collection.
+*DaemonSets* are for *Pods* which should run on every *Node* (or every *Node* matching a specified criteria) instead of scaling to a number of replicas; when new *Nodes* are added to the cluster a new *Pod* from the *DaemonSet* would be scheduled on that *Node*. This is typically used for ongoing background processes such as monitoring and log collection.
 
 ## Configuration
 
@@ -114,7 +114,7 @@ The *Job* concept is extended by *CronJobs*, exactly like system cronjobs these 
 
 One pitfull of *Cronjobs* is that because of how they are scheduled you may not aways get exactly 1 execution each time, the *Job* could be missed or could even run more than once; because of this it is important to make sure your *Cronjobs* are idempotent even though these situations are rare.
 
-*Cronjobs* simply define the schedule and creates the *Job* at the expected time.
+*Cronjobs* simply define the schedule and then create the *Job* at the expected time.
 
 ## Networking
 
@@ -122,7 +122,7 @@ One pitfull of *Cronjobs* is that because of how they are scheduled you may not 
 
 ![Service Icon](resources/images/icons/resources/svc-128.png)
 
-As *Pods* are ephemeral communicating directly with them can be troublesome as they can disappear at any time and be recreated with a new IP address. A *Service* provides a consistent single IP address for a set of *Pods*, provides port access and most importantly provides a consistent DNS name. This then allows both external users, and other *Pods* to communicate with them.
+As *Pods* are ephemeral, communicating directly with them can be troublesome as they can disappear at any time and be recreated with a new IP address. A *Service* provides a consistent single IP address for a set of *Pods*, provides port access and most importantly provides a consistent DNS name. This then allows both external users, and other *Pods* to communicate with them.
 
 For example, if you name your *Service* as "my-app", other *Pods* on the same *Namespace* will be able to communicate with it on the address `my-app`, *Pods* in other *Namespaces* will be able to address it as `my-app.namespace`, `my-app.namespace.svc` or `my-app.namespace.svc.cluster.local` (unless you have defined a *NetworkPolicy* to prevent this).
 
@@ -147,7 +147,7 @@ The *Ingress Controller* is backed by a *Service* with a *LoadBalancer* type, in
 
 ![Endpoints Icon](resources/images/icons/resources/ep-128.png)
 
-The *Endpoints* is a collection of addresses which implement the actual *Service*; you never need to create these directly as they are created automatically when a *Service* is created.
+The *Endpoints* is a collection of addresses which implement the actual *Service*; you never need to create these directly as they are created automatically when a *Service* is created. Note the plural, there is no "Endpoint" resource.
 
 ## Storage
 

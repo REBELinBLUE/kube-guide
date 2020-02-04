@@ -6,7 +6,13 @@ Kubernetes, often abbreviated as K8S, is an orchestration service, designed by G
 
 ## Why use Kubernetes
 
-TODO
+- **Scalability** - Kubernetes makes scaling applications horizontally very easy, it provides load balancing and provides means of restricting resource consumption. It is even able to scale the number of available *Nodes* on the cluster when you are using a supported cloud platform
+
+- **High Availability** - Kubernetes offers high availability, ensuring the cluster is always available. It allows you to deploy your applications in a redundant manner so that it continues to work even if there is a crash and is self healing so that if your application does crash or there is an issue with a *Node* your end users will never even notice.
+
+- **Security** - Kubernetes offers lots of security features, allowing you to segregate applications by logic groupings called *Namespaces*, limiting resource usage and network traffic (provided you use a suitable network interface, explained later on) and allowing you to separate general application configuration from configuration containing secret information (credentials for instance). It allows you to control who can perform which actions on the cluster using Role-Based Access Control (RBAC) and supports restricting access to your web applications at the *Ingress* level (again, explained in a later chapter).
+
+- **Portability** - You are not restricted to a certain cloud provider, there are interfaces for many providers, as well as the ability to run on bare metal. Kubernetes is available on various architectures, including ARM, running a lab cluster on a set of Raspberry Pis is common. You are also not restricted to a specific container runtime, although you have probably heard of Docker there are many other options available such as containerd, CRI-O, rktd and frakti.
 
 ## Components of Kubernetes
 
