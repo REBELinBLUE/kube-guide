@@ -289,9 +289,9 @@ The cluster now looks like the following.
 
 ![Deployment](resources/images/figure2.png)
 
-Now let's see how the *ReplicaSets* work. Change the image tag from `purple` to `blue` and then apply the file again. Whilst you will see the same *Pod* behaviour as deleting a *Pod*, you will also see that there are now 2 *ReplicaSets*
+Now let's see how the *ReplicaSets* work. Change the image tag (version) from `purple` to `blue` and then apply the file again. Whilst you will see the same *Pod* behaviour as deleting a *Pod*, you will also see that there are now 2 *ReplicaSets*
 
-FIXME: Add something about image pull policy and latest tag
+Alongside the `image` field there is also an `imagePullPolicy` field which dictates when Kubernetes pulls images, it has 3 possible values `Always`, `Never` and `IfNotPresent` (the default value). However if you use the image tag `latest` this field will be treated as `Always` to ensure that you always have the latest version, but it is recommended that you are explicit about which version you want running.
 
 ```bash
 NAME                               DESIRED   CURRENT   READY   AGE     CONTAINERS   IMAGES                                SELECTOR
