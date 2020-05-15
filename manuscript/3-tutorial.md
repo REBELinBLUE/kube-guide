@@ -1,19 +1,12 @@
 # Step by Step Tutorial
 
-Now that you have an understanding of the core concepts it is time to try experimenting; for this tutorial you require 
-Docker installed.
+Now that you have an understanding of the core concepts it is time to try experimenting; for this tutorial you require Docker installed.
 
-You also need to install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/), 
-[k3d](https://github.com/rancher/k3d), [watch](https://gitlab.com/procps-ng/procps) if you are using a Mac these 
-are available via [brew](https://brew.sh).
+You also need to install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/), [k3d](https://github.com/rancher/k3d), [watch](https://gitlab.com/procps-ng/procps) if you are using a Mac these are available via [brew](https://brew.sh).
 
-Please ensure that you have a recent version of `kubectl`, the version installed by Docker desktop is not recent 
-enough. This guide was written using version 1.17.1, use `kubectl version` to confirm the version which you 
-have installed.
+Please ensure that you have a recent version of `kubectl`, the version installed by Docker desktop is not recent enough. This guide was written using version 1.17.1, use `kubectl version` to confirm the version which you have installed.
 
-> Throughout this tutorial you will find diagrams of the state of the cluster, a solid line indicates that the resource
-> references the resource it is pointing to, where as a dotted line indicates that it creates the other resource. Each 
-> namespace has a "default" *ServiceAccount* with a *Secret*, this will be left out of the diagrams.
+> Throughout this tutorial you will find diagrams of the state of the cluster, a solid line indicates that the resource references the resource it is pointing to, where as a dotted line indicates that it creates the other resource. Each namespace has a "default" *ServiceAccount* with a *Secret*, this will be left out of the diagrams.
 
 ## Cluster Setup
 

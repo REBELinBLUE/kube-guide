@@ -13,6 +13,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      # - uses: xt0rted/markdownlint-problem-matcher@v1
+
+      - name: Lint
+        uses: nosborn/github-action-markdown-cli@v1.1.1
+        with:
+          files: .
+          config_file: .markdownlint.json
+
       - name: Merge Files
         run: |
           mkdir input

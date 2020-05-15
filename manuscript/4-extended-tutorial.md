@@ -1,7 +1,6 @@
 # Extended Tutorial
 
-Now that you have followed through a step by step tutorial, we will discuss some more advanced features. In this 
-tutorial we will cover the following topics
+Now that you have followed through a step by step tutorial, we will discuss some more advanced features. In this tutorial we will cover the following topics
 
 - Editing and Patching Resources
 - Using *HorizontalPodAutoscalers*

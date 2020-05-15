@@ -1,23 +1,12 @@
 # Kubernetes Resources
 
-There are many different resource definitions in Kubernetes, and with the help of *CustomResourceDefinitions* it is 
-possible to define new ones as well, many applications use CRDs to provide a Kubernetes native experience for 
-configuring them, these are often referred to as [Kubernetes Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
+There are many different resource definitions in Kubernetes, and with the help of *CustomResourceDefinitions* it is possible to define new ones as well, many applications use CRDs to provide a Kubernetes native experience for configuring them, these are often referred to as [Kubernetes Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
 
-Below you will find explanations of many of the core resources. As the *API Server* exposes all the resources 
-using [OpenAPI](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#openapi-and-swagger-definitions) it is 
-possible to get a list of all resource types available on a cluster by running the command `kubectl api-resources`, you 
-can also find the core resource types in the 
-[documentation](https://kubernetes.io/docs/reference/kubectl/overview/#resource-types); you can get an explanation 
-of a resource using `kubectl explain <resource>` and even an explanation of an individual field
- using `kubectl explain <resource>.<fieldName>[.<fieldName>]`.
+Below you will find explanations of many of the core resources. As the *API Server* exposes all the resources using [OpenAPI](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#openapi-and-swagger-definitions) it is possible to get a list of all resource types available on a cluster by running the command `kubectl api-resources`, you can also find the core resource types in the [documentation](https://kubernetes.io/docs/reference/kubectl/overview/#resource-types); you can get an explanation of a resource using `kubectl explain <resource>` and even an explanation of an individual field using `kubectl explain <resource>.<fieldName>[.<fieldName>]`.
 
-Resources are either scoped to a *Namespace* or are cluster wide, the output of `kubectl api-resources` will tell you 
-whether a resource is namespaced or not, but you can add the parameter `--namespaced=true|false` to get only those 
-with a specific scope.
+Resources are either scoped to a *Namespace* or are cluster wide, the output of `kubectl api-resources` will tell you whether a resource is namespaced or not, but you can add the parameter `--namespaced=true|false` to get only those with a specific scope.
 
-Kubernetes resources are normally created in YAML files, called *Manifests* and then applied to the cluster 
-using `kubectl apply -f myapp.yaml`.
+Kubernetes resources are normally created in YAML files, called *Manifests* and then applied to the cluster using `kubectl apply -f myapp.yaml`.
 
 ## Basic Resources
 
