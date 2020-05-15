@@ -1,0 +1,59 @@
+# These settings are synced to GitHub by https://probot.github.io/apps/settings/
+
+repository:
+  name: kube-guide
+  description: A getting started guide for Kubernetes
+  topics: kubernetes, k8s, tutorial, k3d
+
+  private: false
+  archived: false
+
+  has_issues: true
+  has_projects: true
+  has_wiki: false
+  has_downloads: true
+
+  default_branch: master
+  delete_branch_on_merge: true
+
+  allow_squash_merge: true
+  allow_merge_commit: false
+  allow_rebase_merge: false
+
+collaborators:
+  - username: leanpub
+    permission: pull
+
+labels:
+  - name: mistake
+    color: '#6cb524'
+    description: A mistake in the guide
+
+  - name: content
+    color: '#336699'
+    description: New content
+
+  - name: chore
+    color: '#f2df8c'
+    description: Repository maintenance
+
+branches:
+  - name: master
+    protection:
+      required_linear_history: false
+      required_signatures: false
+      allow_force_pushes: false
+      allow_deletions: false
+
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+
+      required_status_checks:
+        strict: true
+        contexts: []
+
+      enforce_admins: false
+
+      restrictions: ~

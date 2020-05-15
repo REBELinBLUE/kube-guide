@@ -1,0 +1,37 @@
+name: Markdown to PDF
+
+on:
+  - push
+
+jobs:
+  converttopdf:
+    name: Build PDF
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Merge Files
+        run: |
+          mkdir input
+
+          for file in manuscript/*.md; do
+            cat "$file";
+          done > input/kubernetes-guide.md
+
+      - name: Generate PDF
+        uses: baileyjm02/markdown-to-pdf@master
+        with:
+          input_dir: input
+          output_dir: output
+          images_dir: manuscript/resources/images
+          image_import: resources/images
+          build_html: false
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: Kubernetes Guide
+          path: output/kubernetes-guide.pdf
