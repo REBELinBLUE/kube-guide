@@ -84,7 +84,7 @@ deployment.apps/kuard image updated
 
 More useful though is `kubectl patch`, this allows you to patch any resource using YAML or JSON. 
 
-Create a file `15-patch.yaml` with the following content
+Create a file `14-patch.yaml` with the following content
 
 ```yaml
 spec:
@@ -110,7 +110,7 @@ Kubernetes supports 2 other merge strategies, "JSON Merge Patch" based on [RFC 7
 Now apply the patch
 
 ```bash
-❯ kubectl patch deployment kuard --patch "$(cat 15-patch.yaml)"
+❯ kubectl patch deployment kuard --patch "$(cat 14-patch.yaml)"
 deployment.apps/kuard patched
 ```
 
@@ -167,7 +167,7 @@ Pod Template:
 Finally, reset the container name in the patch to `kuard` and then let's apply it using the "JSON Merge Patch" strategy
 
 ```bash
-❯ kubectl patch deployment kuard --type merge --patch "$(cat manuscript/resources/code/15-patch.yaml)"
+❯ kubectl patch deployment kuard --type merge --patch "$(cat manuscript/resources/code/14-patch.yaml)"
 deployment.apps/kuard patched
 ```
 

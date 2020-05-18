@@ -1621,7 +1621,7 @@ pod "limit-test" deleted
 ❯ docker start k3d-dev-worker-1 k3d-dev-worker-2
 ```
 
-Create the file `13-deployment-with-resources.yaml` with sensible *ResourceRequirements*, then apply it. 
+Create the file `12-deployment-with-resources.yaml` with sensible *ResourceRequirements*, then apply it. 
 
 ```yaml
 apiVersion: apps/v1
@@ -1725,7 +1725,7 @@ FIELDS:
      Scheme to use for connecting to the host. Defaults to HTTP.
 ```
 
-Create the file `14-deployment-with-probes.yaml` with the following content.
+Create the file `13-deployment-with-probes.yaml` with the following content.
 
 ```yaml
 apiVersion: apps/v1
