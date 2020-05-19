@@ -585,6 +585,8 @@ The *Ingress* defines the `host`, along with `paths`, typically you would just b
 
 You may notice a new field called `annotations`, don't worry about this for now, it will be explained later, just know that they are similar to *Labels* but used for configuration. The first field `kubernetes.io/ingress.class` is not strictly required, however, as mentioned in the introduction, a cluster can have multiple *Ingress Controllers* installed, so it is recommended that you always supply the name of the implementation you wish to use to prevent issues.
 
+> Note: In Kubernetes 1.18 `kubernetes.io/ingress.class` has officially been replaced with the `spec.ingressClassName` field and the *IngressClass* resource, however the various *Ingress Controllers* will need to be updated to support it.
+
 Apply this file in the usual way and you will see that an *Ingress* is created.
 
 ```bash
