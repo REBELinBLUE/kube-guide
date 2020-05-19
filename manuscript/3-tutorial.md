@@ -1569,8 +1569,6 @@ Events:
   Warning  FailedScheduling  <unknown>  default-scheduler  0/4 nodes are available: 4 Insufficient cpu.
 ```
 
-FIXME: Add a test for ephemeral-storage
-
 We are now going to make the *Pod* run a stress test to use up the available memory.
 
 Delete the *Pod* and then create a new manifest called `11-pod-with-low-memory.yaml` which looks something like the following, set the `resources.requests` to sensible values and set the `resources.limits` higher but not too high.
@@ -1676,6 +1674,33 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
+```
+
+#### Quality of Service
+
+Depending on how you configure the *ResourceRequirements* for your *Pods*, Kubernetes will assign it one of 3 different *Quality of Service* classes, Kubernetes uses the *Quality of Service* class when making decisions about scheduling and evicting *Pods*. 
+
+They are as follows, in descending order of priority. 
+
+- `Guaranteed` - A *Pod* is given this class when every *container* has `resources.requests.memory` and `resources.limits.memory` defined with the same value (the same value within each *container* not the same value for every *container*, i.e. container `nginx` can have different values to the container `php-fpm`); and when every  *container* has `resources.requests.cpu` and `resources.limits.cpu` defined with the same value. If a `limit` is defined but a `request` is not, Kubernetes will automatically give them the same value.
+- `Burstable` - A *Pod* if given this class if it does not meet the criteria for `Guaranteed` but at least one of the `resources.requests.memory` or `resources.requests.cpu` is set on at least 1 container. When `limits` are not set the *Pod* will only be limited by the *Node* capacity or the *ResourceQuota*.
+- `BestEffort` - A *Pod* which does not match the criteria for either `Guaranteed` or `Burstable` is given this class. These *Pods* are most likely to be evicted if there is resource contention, however, as they do not have resource requirements assigned they are allowed to use all available resources until it is required by another *Pod*.
+
+We can use `kubectl` to see which *QoSClass* our *Pod* has been assigned. 
+
+```bash
+❯ kubectl get pods -l app=kuard -o jsonpath='{.items[0].status.qosClass}'
+Burstable
+```
+
+You will also see this if you describe the *Pod*.
+
+```bash
+❯ kubectl describe pod -l app=kuard
+Name:         kuard-5b86bbc788-45d27
+...
+QoS Class:       Burstable
+...
 ```
 
 ### Health Checks

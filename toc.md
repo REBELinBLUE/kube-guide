@@ -80,6 +80,7 @@
         - [Replicas](./manuscript/3-tutorial.md#replicas)
         - [Blue-Green Deployments](./manuscript/3-tutorial.md#blue-green-deployments)
         - [Resource Management](./manuscript/3-tutorial.md#resource-management)
+            - [Quality of Service](./manuscript/3-tutorial.md#quality-of-service)
         - [Health Checks](./manuscript/3-tutorial.md#health-checks)
     - [Summary](./manuscript/3-tutorial.md#summary)
 - [Extended Tutorial](./manuscript/4-extended-tutorial.md)
