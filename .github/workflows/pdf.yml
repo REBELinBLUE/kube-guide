@@ -45,6 +45,13 @@ jobs:
           name: Kubernetes Guide
           path: output/kubernetes-guide.pdf
 
+      - name: Set Variables
+        id: vars
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        run: |
+          echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+          echo "::set-output name=today::$(date +'%Y-%d-%m')"
+
       - name: Create Release
         id: create_release
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
@@ -52,8 +59,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: build-${{ github.sha }}
-          release_name: Release ${{ github.sha }}
+          tag_name: v${{ steps.vars.outputs.today }}-${{ steps.vars.outputs.sha8 }}
+          release_name: Build v${{ steps.vars.outputs.today }}-${{ steps.vars.outputs.sha8 }}
           body: ~
           draft: false
           prerelease: true
