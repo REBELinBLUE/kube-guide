@@ -2,7 +2,7 @@
 
 repository:
   name: kube-guide
-  description: A getting started guide for Kubernetes
+  description: A getting started guide for Kubernetes.
   topics: kubernetes, k8s, tutorial, k3d
 
   private: false
