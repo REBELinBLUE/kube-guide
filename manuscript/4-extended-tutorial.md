@@ -185,18 +185,18 @@ If we were to store at template for our patch in a file, for example `patch.jq`
 
 ```jq
 {
-	spec: {
-		template: {
-			spec: {
-				containers: [
-					{
-						name: $name,
-						image: $image
-					}
-				]
-			}
-		}
-	}
+  spec: {
+    template: {
+      spec: {
+        containers: [
+          {
+            name: $name,
+            image: $image
+          }
+        ]
+      }
+    }
+  }
 }
 ```
 
@@ -218,4 +218,3 @@ So we can now patch our *Deployment* using the following
 ❯ kubectl patch deployment kuard --patch "$JSON_PATCH"
 deployment.apps/kuard patched
 ```
-
