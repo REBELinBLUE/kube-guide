@@ -39,7 +39,31 @@ jobs:
           build_html: false
 
       - name: Upload Artifacts
+        if: github.ref != 'refs/heads/master'
         uses: actions/upload-artifact@v1
         with:
           name: Kubernetes Guide
           path: output/kubernetes-guide.pdf
+
+      - name: Create Release
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: ~
+          draft: false
+          prerelease: true
+
+      - name: Upload Release Asset
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: output/kubernetes-guide.pdf
+          asset_name: ubernetes-guide.pdf
+          asset_content_type: application/pdf
