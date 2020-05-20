@@ -1254,8 +1254,7 @@ Let's create a file directly on the *Pod*.
 ❯ kubectl exec deployment/kuard -- sh -c "echo 'Hello from the Pod' > /tmp/hello2.txt"
 ```
 
-> The reason for scaling down the *Deployment* is so that we know that the *Pod* the file is created on is the same
-> one we will be directed to when using the application.
+> The reason for scaling down the *Deployment* is so that we know that the *Pod* the file is created on is the same one we will be directed to when using the application.
 
 Use the file browser to check the file. Now kill the *Pod* and once the new one has started browse to the two files to prove that the first file persists and the second does not.
 

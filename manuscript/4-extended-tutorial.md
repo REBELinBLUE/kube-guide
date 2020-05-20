@@ -221,7 +221,7 @@ deployment.apps/kuard patched
 
 ## Using HorizontalPodAutoscalers
 
-*HorizontalPodAutoscalers* allow you to configure your cluster to automatically add and remove *Pods* based on resource usage. The current stable version of the *HPA* API (autoscaling/v1) only supports scaling based upon CPU usage, however the current beta (autoscaling/v2beta2) also supports scaling based on memory and based on custom metrics exposed by a metrics server.
+*HorizontalPodAutoscalers* allow you to configure your cluster to automatically add and remove *Pods* based on resource usage. The current stable version of the *HPA* API (autoscaling/v1) only supports scaling based upon CPU usage, however the current beta (autoscaling/v2beta2) also supports scaling based on memory and on custom metrics exposed by a metrics server.
 
 You can see the difference using the `kubectl explain` command.
 
@@ -354,7 +354,7 @@ hpa-test-565868f8b4-2tt4r   0m           56Mi
 
 Now let's create a *HorizontalPodAutoscaler* to add more *Pods* when the memory usage is over 85%, this is based on the `requests` rather than the `limits`, so in this example Kubernetes will add new *Pods* when the 5 minute average memory usage is above 42.5Mi and it will keep adding *Pods* until the memory usage is back under the target. Kubernetes will also remove *Pods* when they are no longer needed.
 
-> Note: Since we are using a stress testing tool in this example the memory usage will never drop so make sure you set `maxReplicas` otherwise Kubernetes will keep adding *Pods* until all your *Nodes* are full.
+> WARNING: Since we are using a stress testing tool in this example the memory usage will never drop so make sure you set `maxReplicas` to a fairly small value, otherwise Kubernetes will keep adding *Pods* and could end up filling your *Nodes* completely.
 
 Create a file with the following content.
 
@@ -474,7 +474,7 @@ deployment.apps "hpa-test" deleted
 horizontalpodautoscaler.autoscaling "hpa-test" deleted
 ```
 
-It is recommended that you at least have *HorizontalPodAutoscalers* setup based on `cpu` to prevent throttling, you can also set them up based on `memory` as we did above, however many applications do not clean up their memory usage aggressively so you could end up adding more *Pods* than you actually need.
+It is recommended that you at least have *HorizontalPodAutoscalers* setup based on `cpu` to prevent throttling, you can also set them up based on `memory` as we did here, however many applications do not clean up their memory usage aggressively so you could end up adding more *Pods* than you actually need.
 
 ### Custom Metrics
 
