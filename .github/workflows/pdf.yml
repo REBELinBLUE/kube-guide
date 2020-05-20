@@ -1,7 +1,9 @@
 name: Markdown to PDF
 
 on:
-  - push
+  push:
+  schedule:
+    - cron: "* 2 * * *"
 
 jobs:
   converttopdf:
@@ -39,7 +41,7 @@ jobs:
           build_html: false
 
       - name: Upload Artifacts
-        if: github.ref != 'refs/heads/master'
+        if: github.event_name == 'push'
         uses: actions/upload-artifact@v1
         with:
           name: Kubernetes Guide
@@ -47,31 +49,29 @@ jobs:
 
       - name: Set Variables
         id: vars
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-        run: |
-          echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
-          echo "::set-output name=today::$(date +'%Y-%d-%m')"
+        if: github.ref == 'refs/heads/master' && github.event_name == 'schedule'
+        run: echo "::set-output name=today::$(date +'%Y-%d-%m')"
 
       - name: Create Release
         id: create_release
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/master' && github.event_name == 'schedule'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.vars.outputs.today }}-${{ steps.vars.outputs.sha8 }}
-          release_name: Build v${{ steps.vars.outputs.today }}-${{ steps.vars.outputs.sha8 }}
+          tag_name: ${{ steps.vars.outputs.today }}
+          release_name: Build ${{ steps.vars.outputs.today }}
           body: ~
           draft: false
           prerelease: true
 
       - name: Upload Release Asset
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/master' && github.event_name == 'schedule'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: output/kubernetes-guide.pdf
-          asset_name: kubernetes-guide.pdf
+          asset_name: kubernetes-guide-${{ steps.vars.outputs.today }}.pdf
           asset_content_type: application/pdf
