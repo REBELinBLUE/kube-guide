@@ -119,6 +119,33 @@ k3d-dev-worker-1   Ready    worker   22m   v1.16.3-k3s.2
 k3d-dev-worker-2   Ready    worker   22m   v1.16.3-k3s.2
 ```
 
+Finally you can get a list of the various API resources available on your cluster.
+
+```bash
+❯ kubectl api-resources
+NAME                              SHORTNAMES   APIGROUP                       NAMESPACED   KIND
+configmaps                        cm                                          true         ConfigMap
+namespaces                        ns                                          false        Namespace
+nodes                             no                                          false        Node
+persistentvolumeclaims            pvc                                         true         PersistentVolumeClaim
+persistentvolumes                 pv                                          false        PersistentVolume
+pods                              po                                          true         Pod
+secrets                                                                       true         Secret
+services                          svc                                         true         Service
+deployments                       deploy       apps                           true         Deployment
+replicasets                       rs           apps                           true         ReplicaSett
+pods                              po                                          true         Pod
+ingresses                         ing          networking.k8s.io              true         Ingress
+```
+
+The list above is shortened for space, but these are the resources you are most likely to encounter.
+
+You will notice there are "NAME" and "SHORTNAMES" fields, either of these can be used when referring to a resource, also where the "KIND" singular you can refer to the resource with the name in the singular form (actually the only resource type which is currently plural is `endpoints`).
+
+For example `kubectl get pods` can also be written as `kubectl get pod` or `kubectl get po`; the same applies when refering to a specific instance of a resource, for example `kubectl get configmap/my-config` can be written as `kubectl get cm/my-config`.
+
+You don't need to worry about the "APIGROUP", just know that these are how Kubernetes allows the API to be extended. We will talk about them in the [Extended Tutorial](./4-extended-tutorial.md).
+
 ## Creating a Pod
 
 Now that you have a running cluster, it is time to create a *Pod*. Throughout this tutorial we will be using an application called [kuard](https://github.com/kubernetes-up-and-running/kuard) from the "Kubernetes Up and Running" book.

@@ -6,7 +6,7 @@ Below you will find explanations of many of the core resources. As the *API Serv
 
 Resources are either scoped to a *Namespace* or are cluster wide, the output of `kubectl api-resources` will tell you whether a resource is namespaced or not, but you can add the parameter `--namespaced=true|false` to get only those with a specific scope.
 
-Kubernetes resources are normally created in YAML files, called *Manifests* and then applied to the cluster using `kubectl apply -f myapp.yaml`.
+Kubernetes resources are normally created using YAML files, called *Manifests* and then applied to the cluster using `kubectl apply -f myapp.yaml`.
 
 ## Basic Resources
 

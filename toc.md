@@ -84,3 +84,8 @@
         - [Health Checks](./manuscript/3-tutorial.md#health-checks)
     - [Summary](./manuscript/3-tutorial.md#summary)
 - [Extended Tutorial](./manuscript/4-extended-tutorial.md)
+    - [Updating Resources](./manuscript/4-extended-tutorial.md#update-resources)
+        - [Editing Resources](./manuscript/4-extended-tutorial.md#editing-resources)
+        - [Patching Resources](./manuscript/4-extended-tutorial.md#patching-resources)
+    - [Using HorizontalPodAutoscalers](./manuscript/4-extended-tutorial.md#using-horizontalpodautoscalers)
+        - [Custom Metrics](./manuscript/4-extended-tutorial.md#custom-metrics)

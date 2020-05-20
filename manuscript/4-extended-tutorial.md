@@ -10,7 +10,7 @@ Now that you have followed through a step by step tutorial, we will discuss some
 - Using multiple clusters
 - *ServiceAccounts*, *Roles* and *RoleBindings*
 
-## Editing and Patching Resources
+## Updating Resources
 
 Until now we have updated resources by changing our manifest files and using `kubectl apply` to apply the new version, but there are a couple of other ways to update resources.
 
