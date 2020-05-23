@@ -50,7 +50,7 @@ jobs:
       - name: Set Variables
         id: vars
         if: github.ref == 'refs/heads/master' && github.event_name == 'schedule'
-        run: echo "::set-output name=today::$(date +'%Y-%d-%m')"
+        run: echo "::set-output name=today::$(date +'%Y-%m-%d')"
 
       - name: Create Release
         id: create_release
