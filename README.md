@@ -23,6 +23,6 @@
 
 - [Awesome Kubernetes](https://github.com/ramitsurana/awesome-kubernetes) - Like all other "Awesome" lists but for Kubernetes.
 
-- [Kubernetes on Hypriot](http://github.com/REBELinBLUE/k8s-on-hypriot) - My repository for setting up my homelab cluster consisting of 4 * Raspberry Pi 4.
+- [Kubernetes on Raspbian](http://github.com/REBELinBLUE/k3s-on-raspbian) - My repository for setting up my homelab cluster consisting of 4 * Raspberry Pi 4.
 
 ![Kubernetes, So Hot Right Now](https://media.makeameme.org/created/kubernetes-so-hot.jpg)

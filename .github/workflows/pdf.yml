@@ -2,8 +2,8 @@ name: Markdown to PDF
 
 on:
   push:
-  schedule:
-    - cron: "10 2 * * *"
+  #schedule:
+  #  - cron: "10 2 * * *"
 
 jobs:
   converttopdf:
