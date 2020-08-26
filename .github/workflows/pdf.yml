@@ -52,26 +52,26 @@ jobs:
         if: github.ref == 'refs/heads/master' && github.event_name == 'schedule'
         run: echo "::set-output name=today::$(date +'%Y-%m-%d')"
 
-      - name: Create Release
-        id: create_release
-        if: github.ref == 'refs/heads/master' && github.event_name == 'schedule'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.vars.outputs.today }}
-          release_name: Build ${{ steps.vars.outputs.today }}
-          body: ~
-          draft: false
-          prerelease: true
+      # - name: Create Release
+      #   id: create_release
+      #   if: github.ref == 'refs/heads/master' && github.event_name == 'schedule'
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: ${{ steps.vars.outputs.today }}
+      #     release_name: Build ${{ steps.vars.outputs.today }}
+      #     body: ~
+      #     draft: false
+      #     prerelease: true
 
-      - name: Upload Release Asset
-        if: github.ref == 'refs/heads/master' && github.event_name == 'schedule'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: output/kubernetes-guide.pdf
-          asset_name: kubernetes-guide-${{ steps.vars.outputs.today }}.pdf
-          asset_content_type: application/pdf
+      # - name: Upload Release Asset
+      #   if: github.ref == 'refs/heads/master' && github.event_name == 'schedule'
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: output/kubernetes-guide.pdf
+      #     asset_name: kubernetes-guide-${{ steps.vars.outputs.today }}.pdf
+      #     asset_content_type: application/pdf
