@@ -160,6 +160,8 @@ Now that you have a running cluster, it is time to create a *Pod*. Throughout th
 
 Create the following file and save it as `1-pod.yaml`. This file contains the minimum fields required to create a *Pod*.
 
+> Throughout this tutorial you will see the `kuard-arm64` image in use, if your cluster is not on an M1 Mac, or other machine using ARMv8, then you will want to change to `kuard-amd64` (most likely), `kuard-arm` or `kuard-ppc64le`.
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -168,7 +170,7 @@ metadata:
 spec:
   containers:
     - name: kuard
-      image: gcr.io/kuar-demo/kuard-amd64:purple
+      image: gcr.io/kuar-demo/kuard-arm64:purple
 ```
 
 You can use the `kubectl explain` command to get an explanation of each of these fields, for example
@@ -260,7 +262,7 @@ spec:
     spec:
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
 ```
 
 As previous, you can use the `kubectl explain` command to get an explanation of each of these fields.
@@ -283,10 +285,10 @@ NAME                         READY   STATUS    RESTARTS   AGE   IP          NODE
 pod/kuard-5c46947cf9-l7gv7   1/1     Running   0          11s   10.42.3.5   k3d-dev-agent-2   <none>           <none>
 
 NAME                    READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                SELECTOR
-deployment.apps/kuard   1/1     1            1           11s   kuard        gcr.io/kuar-demo/kuard-amd64:purple   app=kuard
+deployment.apps/kuard   1/1     1            1           11s   kuard        gcr.io/kuar-demo/kuard-arm64:purple   app=kuard
 
 NAME                               DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES                                SELECTOR
-replicaset.apps/kuard-5c46947cf9   1         1         1       11s   kuard        gcr.io/kuar-demo/kuard-amd64:purple   app=kuard,pod-template-hash=5c46947cf9
+replicaset.apps/kuard-5c46947cf9   1         1         1       11s   kuard        gcr.io/kuar-demo/kuard-arm64:purple   app=kuard,pod-template-hash=5c46947cf9
 ```
 
 Now that everything is running, we can delete the *Pod* to show how it is automatically recreated, you can do this with the delete command previously detailed using the *Pod* name, but let's use the *Label* selector to do this instead.
@@ -323,8 +325,8 @@ Alongside the `image` field there is also an `imagePullPolicy` field which dicta
 
 ```bash
 NAME                               DESIRED   CURRENT   READY   AGE     CONTAINERS   IMAGES                                SELECTOR
-replicaset.apps/kuard-6fcbf7b5b5   1         1         1       2m46s   kuard        gcr.io/kuar-demo/kuard-amd64:blue     app=kuard,pod-template-hash=6fcbf7b5b5
-replicaset.apps/kuard-5c46947cf9   0         0         0       5m9s    kuard        gcr.io/kuar-demo/kuard-amd64:purple   app=kuard,pod-template-hash=5c46947cf9
+replicaset.apps/kuard-6fcbf7b5b5   1         1         1       2m46s   kuard        gcr.io/kuar-demo/kuard-arm64:blue     app=kuard,pod-template-hash=6fcbf7b5b5
+replicaset.apps/kuard-5c46947cf9   0         0         0       5m9s    kuard        gcr.io/kuar-demo/kuard-arm64:purple   app=kuard,pod-template-hash=5c46947cf9
 ```
 
 This is how Kubernetes performs zero downtime (also called blue-green or A/B) deployments. It creates a new *ReplicaSet*, launches a *Pod* for the new *ReplicaSet* whilst destroying a *Pod* in the old *ReplicaSet* and continues doing this until all *Pods* have been replaced. This is called the `RollingUpdate strategy`, if you instead wanted all *Pods* destroyed first you can set `spec.strategy.type` to `Recreate` on the *Deployment* but then you would not have zero downtime deployments.
@@ -370,7 +372,7 @@ spec:
     spec:
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -427,7 +429,7 @@ spec:
             - -c
             - sleep 600
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -730,7 +732,7 @@ spec:
             name: kuard
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -782,7 +784,7 @@ spec:
     spec:
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -1042,7 +1044,7 @@ spec:
             name: kuard
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -1233,7 +1235,7 @@ spec:
             claimName: kuard
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -1355,7 +1357,7 @@ spec:
             name: kuard
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -1515,7 +1517,7 @@ Typically you only really need to supply the first 2 of these, `cpu` and `memory
 spec:
   containers:
     - name: kuard
-      image: gcr.io/kuar-demo/kuard-amd64:purple
+      image: gcr.io/kuar-demo/kuard-arm64:purple
       resources:
         requests:
           cpu: 100m
@@ -1572,7 +1574,7 @@ metadata:
 spec:
   containers:
     - name: kuard
-      image: gcr.io/kuar-demo/kuard-amd64:purple
+      image: gcr.io/kuar-demo/kuard-arm64:purple
       resources:
         requests:
           memory: 1Ti
@@ -1613,6 +1615,12 @@ Events:
 We are now going to make the *Pod* run a stress test to use up the available memory.
 
 --- TODO: UPDATED AS FAR AS HERE
+
+--- FIXME: These don't work on k3d
+
+https://kubernetes.io/docs/tasks/configure-pod-container/assign-memory-resource/
+
+https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/
 
 Delete the *Pod* and then create a new manifest called `11-pod-with-low-memory.yaml` which looks something like the following, set the `resources.requests` to sensible values and set the `resources.limits` higher but not too high.
 
@@ -1694,7 +1702,7 @@ spec:
             claimName: kuard
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -1825,7 +1833,7 @@ spec:
             claimName: kuard
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080

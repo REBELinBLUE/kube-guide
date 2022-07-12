@@ -5,4 +5,4 @@ metadata:
 spec:
   containers:
     - name: kuard
-      image: gcr.io/kuar-demo/kuard-amd64:purple
+      image: gcr.io/kuar-demo/kuard-arm64:purple
