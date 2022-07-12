@@ -150,7 +150,7 @@ The list above is shortened for space, but these are the resources you are most 
 
 You will notice there are "NAME" and "SHORTNAMES" fields, either of these can be used when referring to a resource, also where the "KIND" singular you can refer to the resource with the name in the singular form (actually the only resource type which is currently plural is `endpoints`).
 
-For example `kubectl get pods` can also be written as `kubectl get pod` or `kubectl get po`; the same applies when refering to a specific instance of a resource, for example `kubectl get configmap/my-config` can be written as `kubectl get cm/my-config`.
+For example `kubectl get pods` can also be written as `kubectl get pod` or `kubectl get po`; the same applies when referring to a specific instance of a resource, for example `kubectl get configmap/my-config` can be written as `kubectl get cm/my-config`.
 
 You don't need to worry about the "APIGROUP", just know that these are how Kubernetes allows the API to be extended. We will talk about them in the [Extended Tutorial](./4-extended-tutorial.md).
 
@@ -621,12 +621,6 @@ spec:
 
 The *Ingress* defines the `host`, along with `paths`, typically you would just be using a `path` of `/` but there may be situations where you want different paths in an *Ingress* to be backed by different *Services* (thus different *Pods*); under the `path` we then specify which *Service* backs the *Ingress* and the port to map to. The *Ingress Controller* runs on the usual HTTP and HTTPS ports; for HTTPS, SSL is (normally) terminated at the *Ingress* and then communication with the *Pod* is via HTTP.
 
-~~You may notice a new field called `annotations`, don't worry about this for now, it will be explained later, just know that they are similar to *Labels* but used for configuration. The first field `kubernetes.io/ingress.class` is not strictly required, however, as mentioned in the introduction, a cluster can have multiple *Ingress Controllers* installed, so it is recommended that you always supply the name of the implementation you wish to use to prevent issues.~~
-
-~~TODO: Update with ingressClassName 5.1-ingress-class-name~~
-
-> ~~Note: In Kubernetes 1.18 `kubernetes.io/ingress.class` has officially been replaced with the `spec.ingressClassName` field and the *IngressClass* resource, however the various *Ingress Controllers* will need to be updated to support it.~~
-
 Apply this file in the usual way and you will see that an *Ingress* is created.
 
 ```bash
@@ -660,10 +654,63 @@ We now have a fully working application!
 
 #### Ingress Classes
 
-It is possible to have more than one ingress implementation installed on your cluster, for example if you want one instance configured to gzip the response and one instance which doesn't.
+It is possible to have more than one *Ingress Controller* on your cluster, for example if you want one instance configured to gzip the response and one instance which doesn't.
 
-TODO.... Finish
+You can even have completely different implementations installed, for example [https://traefik.io/traefik/](Traefik), [https://docs.konghq.com/kubernetes-ingress-controller/latest/](Kong) and [https://github.com/kubernetes/ingress-nginx](Ingress-NGINX).
 
+To tell Kubernetes which *Ingress Controller* to use for a particular *Ingress* you need to specify the *IngressClass*, if none is specified then the *IngressClass* which is default will be used. Some Ingress Controllers will listen for ingresses without a class defined, but this is not the recommended way to work.
+
+> NOTE: Prior to version 1.18, Kubernetes did not have the IngressClass resource, instead Ingress Controllers looked at all ingresses and read from the `kubernetes.io/ingress.class` annotation. Don't worry about *Annotations* for now, they will be explained later, just know that they are similar to *Labels* but used for configuration.
+> 
+> This has now been replaced with the `ingressClassName` field.
+
+As mentioned, k3s comes with the Traefik; however no *IngressClass* is defined as it is not needed when there is only one Ingress Controller, but there is no harm defining it, in fact defining it now will make it easier to maintain the cluster in future if you install a second Ingress Controller.
+
+Create a file called `5.1-ingress-class.yaml` with the following content.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: traefik
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: "true"
+spec:
+  controller: traefik.io/ingress-controller
+```
+
+Apply this file and from now on, any *Ingress* without an *ingressClassName* specified will use Traefik, as the `ingressclass.kubernetes.io/is-default-class` annotation is `true` .
+
+However, it is recommended that you explicitly define on all Ingresses, which class they use so that if the default changes in future it does not impact existing resources; to do this simply update the *Ingress* to add the `ingressClassName`
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kuard
+  labels:
+    app: kuard
+spec:
+	ingressClassName: traefik
+  rules:
+    - host: kuard.cluster.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kuard
+                port:
+                  number: 8888
+```
+
+Apply this file in the usual way and you will see that the Ingress now has a class defined.
+
+```bash
+NAME    CLASS     HOSTS                 ADDRESS                                       PORTS   AGE
+kuard   traefik   kuard.cluster.local   172.19.0.3,172.19.0.4,172.19.0.5,172.19.0.6   80      45m
+```
 
 ## Injecting Configuration
 
@@ -1111,7 +1158,7 @@ We haven't talked about *Annotations* yet. Much like *Labels*, they are for appl
 ```bash
 ❯ kubectl explain ingress.metadata.annotations
 KIND:     Ingress
-VERSION:  extensions/v1beta1
+VERSION:  networking.k8s.io/v1
 
 FIELD:    annotations <map[string]string>
 
@@ -1612,13 +1659,11 @@ Events:
   Warning  FailedScheduling  2s    default-scheduler  0/4 nodes are available: 1 node(s) had taint {node-role.kubernetes.io/master: }, that the pod didn't tolerate, 3 Insufficient cpu.
 ```
 
-You can run a stress test the memory and CPU to see what happens when the limits are breached by using the following examples
+You can run a stress test for the memory and CPU to see what happens when the limits are breached by using the following examples; unfortunately, at present these examples do not work on k3d.
 
 https://kubernetes.io/docs/tasks/configure-pod-container/assign-memory-resource/
 
 https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/
-
-Unfortunately, at present these examples do not work on k3d.
 
 Now we've finished, delete the *Pod*.
 

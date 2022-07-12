@@ -17,7 +17,3 @@ spec:
                 name: kuard
                 port:
                   number: 8888
-  tls:
-    - hosts:
-        - kuard.cluster.local
-      secretName: kuard-tls
