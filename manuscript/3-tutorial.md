@@ -1612,55 +1612,13 @@ Events:
   Warning  FailedScheduling  2s    default-scheduler  0/4 nodes are available: 1 node(s) had taint {node-role.kubernetes.io/master: }, that the pod didn't tolerate, 3 Insufficient cpu.
 ```
 
-We are now going to make the *Pod* run a stress test to use up the available memory.
-
---- TODO: UPDATED AS FAR AS HERE
-
---- FIXME: These don't work on k3d
+You can run a stress test the memory and CPU to see what happens when the limits are breached by using the following examples
 
 https://kubernetes.io/docs/tasks/configure-pod-container/assign-memory-resource/
 
 https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/
 
-Delete the *Pod* and then create a new manifest called `11-pod-with-low-memory.yaml` which looks something like the following, set the `resources.requests` to sensible values and set the `resources.limits` higher but not too high.
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: limit-test
-spec:
-  containers:
-    - name: stress
-      image: polinux/stress
-      resources:
-        requests:
-          memory: 50Mi
-          cpu: 100m
-        limits:
-          memory: 100Mi
-          cpu: 110m
-      command: ["stress"]
-      args: ["--vm", "10", "--vm-bytes", "250M", "--vm-hang", "1", "--vm-keep"]
-```
-
-Apply the manifest, the *Pod* will start and it will start using up more memory. You should soon see the *Pod* status change to "OOMKilled", the container will restart a few times and eventually the *Pod* ends up with a status of "CrashLoopBack" (this is because our *Pod* is crashing quickly and often, normally it would just restart). Describe the *Pod* and you will see it is being killed because it is out of memory.
-
-```bash
-❯ kubectl describe pod/limit-test
-Name:         limit-test
-...
-Containers:
-  stress:
-    ...
-    State:          Terminated
-      Reason:       OOMKilled
-      Exit Code:    3
-      Started:      Wed, 22 Jan 2020 21:48:43 +0000
-      Finished:     Wed, 22 Jan 2020 21:48:48 +0000
-```
-
-CPU throttling is harder to demonstrate, I was not able to get a demo working properly on a virtual cluster but you can find an example on the [Kubernetes site](https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/).
+Unfortunately, at present these examples do not work on k3d.
 
 Now we've finished, delete the *Pod*.
 
@@ -1669,7 +1627,7 @@ Now we've finished, delete the *Pod*.
 pod "limit-test" deleted
 ```
 
-Create the file `12-deployment-with-resources.yaml` with sensible *ResourceRequirements*, then apply it. 
+Create the file `11-deployment-with-resources.yaml` with sensible *ResourceRequirements*, then apply it. 
 
 ```yaml
 apiVersion: apps/v1
@@ -1800,7 +1758,7 @@ FIELDS:
      Scheme to use for connecting to the host. Defaults to HTTP.
 ```
 
-Create the file `13-deployment-with-probes.yaml` with the following content.
+Create the file `12-deployment-with-probes.yaml` with the following content.
 
 ```yaml
 apiVersion: apps/v1
