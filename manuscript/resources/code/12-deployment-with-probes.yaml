@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuard
+  labels:
+    app: kuard
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: kuard
+  template:
+    metadata:
+      labels:
+        app: kuard
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kuard
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: kuard
+      containers:
+        - name: kuard
+          image: gcr.io/kuar-demo/kuard-arm64:purple
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: data-volume
+              mountPath: /data
+          env:
+            - name: A_SECRET_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kuard
+                  key: secret-password
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: 8080
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3

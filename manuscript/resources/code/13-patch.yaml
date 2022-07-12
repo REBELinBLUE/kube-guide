@@ -1,0 +1,6 @@
+spec:
+  template:
+    spec:
+      containers:
+      - name: kuard
+        image: gcr.io/kuar-demo/kuard-arm64:green
