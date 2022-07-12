@@ -132,6 +132,12 @@ This is where the *Ingress* resource comes in. The *Ingress* is backed by an *In
 
 The *Ingress Controller* is backed by a *Service* with a *LoadBalancer* type, inbound traffic hits the controller, which will then route it to another *Service* (typically with a *ClusterIP* type) using the hostname the request is for. An *Ingress* can also route based on the path for the request, and depending upon which *Ingress Controller* implementation is used, can do things like authentication, IP whitelisting, request modification and SSL termination.
 
+### IngressClass
+
+An *IngressClass* allows a cluster administrator to define different types of *Ingress Controllers* available for use, for example [Ingress-NGINX](https://github.com/kubernetes/ingress-nginx), [Traefik](https://traefik.io/traefik/) & [Kong](https://docs.konghq.com/kubernetes-ingress-controller/latest/).
+
+When defining an *Ingress* you would specify which *IngressClass* to use, and if you do not specify one then the cluster default is used.
+
 ### Endpoints
 
 ![Endpoints Icon](resources/images/icons/resources/ep-128.png)
