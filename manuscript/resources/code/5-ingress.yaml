@@ -1,17 +1,18 @@
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: kuard
   labels:
     app: kuard
-  annotations:
-    kubernetes.io/ingress.class: traefik
 spec:
   rules:
     - host: kuard.cluster.local
       http:
         paths:
           - path: /
+            pathType: Prefix
             backend:
-              serviceName: kuard
-              servicePort: 8888
+              service:
+                name: kuard
+                port:
+                  number: 8888

@@ -4,7 +4,7 @@ Now that you have an understanding of the core concepts it is time to try experi
 
 You also need to install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/), [k3d](https://github.com/rancher/k3d), [watch](https://gitlab.com/procps-ng/procps) if you are using a Mac these are available via [brew](https://brew.sh).
 
-Please ensure that you have a recent version of `kubectl`, the version installed by Docker desktop is not recent enough. This guide was written using version 1.17.1, use `kubectl version` to confirm the version which you have installed.
+Please ensure that you have a recent version of `kubectl`, the version installed by Docker desktop is not recent enough. This guide was written using version 1.24.2, use `kubectl version` to confirm the version which you have installed.
 
 > Throughout this tutorial you will find diagrams of the state of the cluster, a solid line indicates that the resource references the resource it is pointing to, where as a dotted line indicates that it creates the other resource. Each namespace has a "default" *ServiceAccount* with a *Secret*, this will be left out of the diagrams.
 
@@ -13,49 +13,55 @@ Please ensure that you have a recent version of `kubectl`, the version installed
 k3d is a tool for running a virtual cluster in Docker, the first step is to bootstrap a cluster, for this we will create 3 workers and direct port `80` and `443` on the local machine to the same ports on the cluster.
 
 ```bash
-❯ k3d create --name dev --api-port 6551 --publish 80:80 --publish 443:443 --workers 3
+❯ k3d cluster create dev --api-port 6551 --port "80:80@loadbalancer" --port "443:443@loadbalancer" --agents 3
 ```
 
 If everything has worked as intended you should see output like the following
 
 ```bash
-INFO[0000] Created cluster network with ID e46f7d11b833f74421d8dd19c6fc81780056f08bf37475663e4556e195cb4437
-INFO[0000] Created Docker volume  k3d-dev-images
-INFO[0000] Creating cluster [dev]
-INFO[0000] Creating server using Docker.io/rancher/k3s:v1.0.1...
-INFO[0003] Booting 3 workers for cluster dev
-INFO[0009] Created worker with ID 60279aafce8dc4aa20c5c481ea2d9807318d296d25b40b7f650f9df0849f15b1
-INFO[0010] Created worker with ID 3ca00a875799b18a8e157b319999d76bb617a56b0c251504a7f8e6057315ec36
-INFO[0010] Created worker with ID 32b222baaf253a549e3185f5f917882ec400a27fd3aeb389ce754e934fb46d87
-INFO[0010] SUCCESS: created cluster [dev]
-INFO[0010] You can now use the cluster with:
-
-export KUBECONFIG="$(k3d get-kubeconfig --name='dev')"
+INFO[0000] portmapping '80:80' targets the loadbalancer: defaulting to [servers:*:proxy agents:*:proxy]
+INFO[0000] portmapping '443:443' targets the loadbalancer: defaulting to [servers:*:proxy agents:*:proxy]
+INFO[0000] Prep: Network
+INFO[0000] Created network 'k3d-dev'
+INFO[0000] Created image volume k3d-dev-images
+INFO[0000] Starting new tools node...
+INFO[0000] Starting Node 'k3d-dev-tools'
+INFO[0001] Creating node 'k3d-dev-server-0'
+INFO[0001] Creating node 'k3d-dev-agent-0'
+INFO[0001] Creating node 'k3d-dev-agent-1'
+INFO[0001] Creating node 'k3d-dev-agent-2'
+INFO[0001] Creating LoadBalancer 'k3d-dev-serverlb'
+INFO[0001] Using the k3d-tools node to gather environment information
+INFO[0001] Starting new tools node...
+INFO[0001] Starting Node 'k3d-dev-tools'
+INFO[0002] Starting cluster 'dev'
+INFO[0002] Starting servers...
+INFO[0002] Starting Node 'k3d-dev-server-0'
+INFO[0006] Starting agents...
+INFO[0006] Starting Node 'k3d-dev-agent-2'
+INFO[0006] Starting Node 'k3d-dev-agent-1'
+INFO[0006] Starting Node 'k3d-dev-agent-0'
+INFO[0017] Starting helpers...
+INFO[0017] Starting Node 'k3d-dev-serverlb'
+INFO[0023] Injecting records for hostAliases (incl. host.k3d.internal) and for 6 network members into CoreDNS configmap...
+INFO[0025] Cluster 'dev' created successfully!
+INFO[0025] You can now use it like this:
 kubectl cluster-info
-```
-
-You then need to run the `export` line mentioned at the end in any terminal sessions you wish to use.
-
-You can also get the path to config file and merge it with `~/.kube/config`.
-
-```bash
-❯ k3d get-kubeconfig --name='dev'
-~/.config/k3d/dev/kubeconfig.yaml
 ```
 
 Note: If you want to destroy the cluster you can run the following command (you can also `stop` or `start` the cluster by replacing `del`).
 
 ```bash
-❯ k3d del --name dev
+❯ k3d cluster delete dev
 ```
 
 Now you have created the cluster, ensure everything is working as intended by running `kubectl cluster-info`, you should see output like the following
 
 ```bash
 ❯ kubectl cluster-info
-Kubernetes master is running at https://localhost:6551
-CoreDNS is running at https://localhost:6551/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
-Metrics-server is running at https://localhost:6551/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
+Kubernetes control plane is running at https://0.0.0.0:6551
+CoreDNS is running at https://0.0.0.0:6551/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+Metrics-server is running at https://0.0.0.0:6551/api/v1/namespaces/kube-system/services/https:metrics-server:https/proxy
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 ```
@@ -64,22 +70,24 @@ If you run `docker ps` you can see the virtual cluster running via Docker.
 
 ```bash
 ❯ docker ps
-CONTAINER ID        IMAGE                COMMAND                  CREATED             STATUS              PORTS                                                              NAMES
-32b222baaf25        rancher/k3s:v1.0.1   "/bin/k3s agent"         8 minutes ago       Up 8 minutes                                                                           k3d-dev-worker-2
-3ca00a875799        rancher/k3s:v1.0.1   "/bin/k3s agent"         8 minutes ago       Up 8 minutes                                                                           k3d-dev-worker-1
-60279aafce8d        rancher/k3s:v1.0.1   "/bin/k3s agent"         8 minutes ago       Up 8 minutes                                                                           k3d-dev-worker-0
-eb59d7980fb8        rancher/k3s:v1.0.1   "/bin/k3s server --h…"   8 minutes ago       Up 8 minutes        0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp, 0.0.0.0:6551->6551/tcp   k3d-dev-server
+CONTAINER ID   IMAGE                            COMMAND                  CREATED         STATUS         PORTS                                                              NAMES
+47e5136d73d9   ghcr.io/k3d-io/k3d-tools:5.4.3   "/app/k3d-tools noop"    2 minutes ago   Up 2 minutes                                                                      k3d-dev-tools
+9d038d6f95ec   ghcr.io/k3d-io/k3d-proxy:5.4.3   "/bin/sh -c nginx-pr…"   2 minutes ago   Up 2 minutes   0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp, 0.0.0.0:6551->6443/tcp   k3d-dev-serverlb
+4d0947385a8c   rancher/k3s:v1.23.6-k3s1         "/bin/k3d-entrypoint…"   2 minutes ago   Up 2 minutes                                                                      k3d-dev-agent-2
+166a53e55ffc   rancher/k3s:v1.23.6-k3s1         "/bin/k3d-entrypoint…"   2 minutes ago   Up 2 minutes                                                                      k3d-dev-agent-1
+c763fdfff4ed   rancher/k3s:v1.23.6-k3s1         "/bin/k3d-entrypoint…"   2 minutes ago   Up 2 minutes                                                                      k3d-dev-agent-0
+491e6480a7b1   rancher/k3s:v1.23.6-k3s1         "/bin/k3d-entrypoint…"   2 minutes ago   Up 2 minutes                                                                      k3d-dev-server-0
 ```
 
 you can also see the *Nodes* using `kubectl get nodes`
 
 ```bash
 ❯ kubectl get nodes
-NAME               STATUS   ROLES    AGE     VERSION
-k3d-dev-server     Ready    master   8m36s   v1.16.3-k3s.2
-k3d-dev-worker-0   Ready    <none>   8m35s   v1.16.3-k3s.2
-k3d-dev-worker-1   Ready    <none>   8m34s   v1.16.3-k3s.2
-k3d-dev-worker-2   Ready    <none>   8m34s   v1.16.3-k3s.2
+NAME               STATUS   ROLES                  AGE     VERSION
+k3d-dev-server-0   Ready    control-plane,master   3m6s    v1.23.6+k3s1
+k3d-dev-agent-0    Ready    <none>                 3m      v1.23.6+k3s1
+k3d-dev-agent-1    Ready    <none>                 2m59s   v1.23.6+k3s1
+k3d-dev-agent-2    Ready    <none>                 2m59s   v1.23.6+k3s1
 ```
 
 In a normal Kubernetes cluster *Pods* should not be scheduled on the master *Nodes*, however as k3d is a virtual cluster it is not set up like this. You can change this by applying a *taint* to the *Node*, *taints* are a way to tell the *Scheduler* not to schedule *Pods* on the *Node*. By default, master has a *taint*, however they can also be used for other things, for example if you have a *Node* with a special GPU or a slow hard drive you would apply a *taint* to prevent scheduling.
@@ -89,8 +97,8 @@ In a normal Kubernetes cluster *Pods* should not be scheduled on the master *Nod
 Now you have an understanding of *taints* and *tolerations* you should *taint* the master *Node*.
 
 ```bash
-❯ kubectl taint nodes k3d-dev-server node-role.kubernetes.io/master="":NoSchedule
-node/k3d-dev-server tainted
+❯ kubectl taint nodes k3d-dev-server-0 node-role.kubernetes.io/master="":NoSchedule
+node/k3d-dev-server-0 tainted
 ```
 
 It is also useful to *Label* the workers so that they can be easily identified. *Labels* are pieces of metadata which can be applied to all resources as a means of describing them, for example you could use a "maintainer" *Label* to specify who maintains the resource, a "project" *Label* to specify which project the resources belong to or a "cost" *Label* to specify a cost center for reporting purposes. There are a set of [recommended labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/).
@@ -98,25 +106,25 @@ It is also useful to *Label* the workers so that they can be easily identified. 
 Let's apply the "node-role.kubernetes.io" *Label* to the workers.
 
 ```bash
-❯ kubectl label node k3d-dev-worker-0 node-role.kubernetes.io/worker=worker
-node/k3d-dev-worker-0 labeled
+❯ kubectl label node k3d-dev-agent-0 node-role.kubernetes.io/worker=worker
+node/k3d-dev-agent-0 labeled
 
-❯ kubectl label node k3d-dev-worker-1 node-role.kubernetes.io/worker=worker
-node/k3d-dev-worker-1 labeled
+❯ kubectl label node k3d-dev-agent-1 node-role.kubernetes.io/worker=worker
+node/k3d-dev-agent-1 labeled
 
-❯ kubectl label node k3d-dev-worker-2 node-role.kubernetes.io/worker=worker
-node/k3d-dev-worker-2 labeled
+❯ kubectl label node k3d-dev-agent-2 node-role.kubernetes.io/worker=worker
+node/k3d-dev-agent-2 labeled
 ```
 
 Now if you get the *Nodes* you will see that the workers have a role defined.
 
 ```bash
 ❯ kubectl get nodes
-NAME               STATUS   ROLES    AGE   VERSION
-k3d-dev-server     Ready    master   22m   v1.16.3-k3s.2
-k3d-dev-worker-0   Ready    worker   22m   v1.16.3-k3s.2
-k3d-dev-worker-1   Ready    worker   22m   v1.16.3-k3s.2
-k3d-dev-worker-2   Ready    worker   22m   v1.16.3-k3s.2
+NAME               STATUS   ROLES                  AGE     VERSION
+k3d-dev-server-0   Ready    control-plane,master   6m6s    v1.23.6+k3s1
+k3d-dev-agent-0    Ready    worker                 6m      v1.23.6+k3s1
+k3d-dev-agent-1    Ready    worker                 5m59s   v1.23.6+k3s1
+k3d-dev-agent-2    Ready    worker                 5m59s   v1.23.6+k3s1
 ```
 
 Finally you can get a list of the various API resources available on your cluster.
@@ -142,7 +150,7 @@ The list above is shortened for space, but these are the resources you are most 
 
 You will notice there are "NAME" and "SHORTNAMES" fields, either of these can be used when referring to a resource, also where the "KIND" singular you can refer to the resource with the name in the singular form (actually the only resource type which is currently plural is `endpoints`).
 
-For example `kubectl get pods` can also be written as `kubectl get pod` or `kubectl get po`; the same applies when refering to a specific instance of a resource, for example `kubectl get configmap/my-config` can be written as `kubectl get cm/my-config`.
+For example `kubectl get pods` can also be written as `kubectl get pod` or `kubectl get po`; the same applies when referring to a specific instance of a resource, for example `kubectl get configmap/my-config` can be written as `kubectl get cm/my-config`.
 
 You don't need to worry about the "APIGROUP", just know that these are how Kubernetes allows the API to be extended. We will talk about them in the [Extended Tutorial](./4-extended-tutorial.md).
 
@@ -152,6 +160,8 @@ Now that you have a running cluster, it is time to create a *Pod*. Throughout th
 
 Create the following file and save it as `1-pod.yaml`. This file contains the minimum fields required to create a *Pod*.
 
+> Throughout this tutorial you will see the `kuard-arm64` image in use, if your cluster is not on an M1 Mac, or other machine using ARMv8, then you will want to change to `kuard-amd64` (most likely), `kuard-arm` or `kuard-ppc64le`.
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -160,7 +170,7 @@ metadata:
 spec:
   containers:
     - name: kuard
-      image: gcr.io/kuar-demo/kuard-amd64:purple
+      image: gcr.io/kuar-demo/kuard-arm64:purple
 ```
 
 You can use the `kubectl explain` command to get an explanation of each of these fields, for example
@@ -183,7 +193,7 @@ FIELDS:
      ...
 ```
 
-Before going any further, you should open a new terminal (remember to run the `export` command detailed previously) and run the following command, which will get a list of the *Nodes* plus all other resources we will be creating in the "default" *Namespace* and will refresh every 2 seconds, keep this running whilst performing the other commands to see the operations happening.
+Before going any further, you should open a new terminal and run the following command, which will get a list of the *Nodes* plus all other resources we will be creating in the "default" *Namespace* and will refresh every 2 seconds, keep this running whilst performing the other commands to see the operations happening.
 
 ```bash
 watch kubectl get nodes,pod,deploy,rs,svc,ing,cm,secret,pvc,pv -o wide
@@ -199,8 +209,8 @@ pod/kuard created
 in the other terminal the output should change to include something similar to the following.
 
 ```bash
-NAME        READY   STATUS    RESTARTS   AGE     IP          NODE               NOMINATED NODE   READINESS GATES
-pod/kuard   1/1     Running   0          47s     10.42.1.4   k3d-dev-worker-0   <none>           <none>
+NAME        READY   STATUS    RESTARTS   AGE   IP          NODE              NOMINATED NODE   READINESS GATES
+pod/kuard   1/1     Running   0          32s   10.42.3.4   k3d-dev-agent-2   <none>           <none>
 ```
 
 Most of the fields here should be self explanatory, ignore the last 2 for now but the one which may not be obvious is the "READY" field, this is telling us that 1 container is running and there are a total of 1 containers defined in the *Pod*, you want both of these numbers to be the same.
@@ -209,11 +219,11 @@ Now the *Pod* is running we can connect to it by running a shell interactively o
 
 ```bash
 # Start the sh shell
-❯ kubectl exec pod/kuard -it sh
+❯ kubectl exec pod/kuard -it -- sh
 ~ $
 
 # Run the hostname command
-❯ kubectl exec pod/kuard hostname
+❯ kubectl exec pod/kuard -- hostname
 kuard
 ```
 
@@ -252,7 +262,7 @@ spec:
     spec:
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
 ```
 
 As previous, you can use the `kubectl explain` command to get an explanation of each of these fields.
@@ -271,36 +281,36 @@ deployment.apps/kuard created
 In the other terminal you should notice that 3 new resources are created, a *Deployment*, a *ReplicaSet* and a *Pod*.
 
 ```bash
-NAME                         READY   STATUS    RESTARTS   AGE   IP          NODE               NOMINATED NODE   READINESS GATES
-pod/kuard-77d8b8d648-lwhkz   1/1     Running   0          51s   10.42.1.5   k3d-dev-worker-0   <none>           <none>
+NAME                         READY   STATUS    RESTARTS   AGE   IP          NODE              NOMINATED NODE   READINESS GATES
+pod/kuard-5c46947cf9-l7gv7   1/1     Running   0          11s   10.42.3.5   k3d-dev-agent-2   <none>           <none>
 
 NAME                    READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                SELECTOR
-deployment.apps/kuard   1/1     1            1           51s   kuard        gcr.io/kuar-demo/kuard-amd64:purple   app=kuard
+deployment.apps/kuard   1/1     1            1           11s   kuard        gcr.io/kuar-demo/kuard-arm64:purple   app=kuard
 
 NAME                               DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES                                SELECTOR
-replicaset.apps/kuard-77d8b8d648   1         1         1       51s   kuard        gcr.io/kuar-demo/kuard-amd64:purple   app=kuard,pod-template-hash=77d8b8d648
+replicaset.apps/kuard-5c46947cf9   1         1         1       11s   kuard        gcr.io/kuar-demo/kuard-arm64:purple   app=kuard,pod-template-hash=5c46947cf9
 ```
 
 Now that everything is running, we can delete the *Pod* to show how it is automatically recreated, you can do this with the delete command previously detailed using the *Pod* name, but let's use the *Label* selector to do this instead.
 
 ```bash
 ❯ kubectl delete pod -l app=kuard
-pod "kuard-77d8b8d648-lwhkz" deleted
+pod "kuard-5c46947cf9-l7gv7" deleted
 ```
 
 You should immediately notice a new *Pod* being created whilst the old one is being destroyed.
 
 ```bash
 NAME                         READY   STATUS              RESTARTS   AGE     IP          NODE               NOMINATED NODE   READINESS GATES
-pod/kuard-77d8b8d648-xtjn2   0/1     ContainerCreating   0          1s      <none>      k3d-dev-worker-1   <none>           <none>
-pod/kuard-77d8b8d648-lwhkz   0/1     Terminating         0          2m35s   10.42.1.5   k3d-dev-worker-0   <none>           <none>
+pod/kuard-5c46947cf9-xtjn2   0/1     ContainerCreating   0          1s      <none>      k3d-dev-agent-1   <none>           <none>
+pod/kuard-5c46947cf9-l7gv7   0/1     Terminating            0          11s   10.42.3.5   k3d-dev-agent-2   <none>           <none>
 ```
 
 after a few seconds it should be completely replaced
 
 ```bash
 NAME                         READY   STATUS    RESTARTS   AGE   IP          NODE               NOMINATED NODE   READINESS GATES
-pod/kuard-77d8b8d648-xtjn2   1/1     Running   0          57s   10.42.2.5   k3d-dev-worker-1   <none>           <none>
+pod/kuard-5c46947cf9-xtjn2   1/1     Running   0          57s   10.42.2.5   k3d-dev-agent-1   <none>           <none>
 ```
 
 You may notice that the "RESTARTS" field is still 0, so why is this? Because the *Pod* has not been restarted, but instead the *Pod* has been destroyed and a completely new one created; in the day to day running of the cluster, when the health checks are failing the *Pods* will instead be restarted.
@@ -315,8 +325,8 @@ Alongside the `image` field there is also an `imagePullPolicy` field which dicta
 
 ```bash
 NAME                               DESIRED   CURRENT   READY   AGE     CONTAINERS   IMAGES                                SELECTOR
-replicaset.apps/kuard-5b89578678   1         1         1       46s     kuard        gcr.io/kuar-demo/kuard-amd64:blue     app=kuard,pod-template-hash=5b89578678
-replicaset.apps/kuard-77d8b8d648   0         0         0       7m48s   kuard        gcr.io/kuar-demo/kuard-amd64:purple   app=kuard,pod-template-hash=77d8b8d648
+replicaset.apps/kuard-6fcbf7b5b5   1         1         1       2m46s   kuard        gcr.io/kuar-demo/kuard-arm64:blue     app=kuard,pod-template-hash=6fcbf7b5b5
+replicaset.apps/kuard-5c46947cf9   0         0         0       5m9s    kuard        gcr.io/kuar-demo/kuard-arm64:purple   app=kuard,pod-template-hash=5c46947cf9
 ```
 
 This is how Kubernetes performs zero downtime (also called blue-green or A/B) deployments. It creates a new *ReplicaSet*, launches a *Pod* for the new *ReplicaSet* whilst destroying a *Pod* in the old *ReplicaSet* and continues doing this until all *Pods* have been replaced. This is called the `RollingUpdate strategy`, if you instead wanted all *Pods* destroyed first you can set `spec.strategy.type` to `Recreate` on the *Deployment* but then you would not have zero downtime deployments.
@@ -362,7 +372,7 @@ spec:
     spec:
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -419,16 +429,16 @@ spec:
             - -c
             - sleep 600
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
 ```
 
-Now apply the file `kubectl apply -f 3-container-with-ports.yaml`. Once the *Pod* is running we can then run `curl` in the new container to demonstrate that they can communicate
+Now apply the file `kubectl apply -f 3.1-deployment-with-ports-and-curl.yaml`. Once the *Pod* is running we can then run `curl` in the new container to demonstrate that they can communicate
 
 ```bash
-❯ kubectl exec deploy/kuard -c curl curl http://localhost:8080/
+❯ kubectl exec deploy/kuard -c curl -- curl http://localhost:8080/
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100  1465  100  1465    0     0   715k      0 --:--:-- --:--:-- --:--:--  715k
@@ -469,7 +479,7 @@ Get the IP of the `kuard` *Pod* and then run `curl` from the new `curl` *Pod*.
 ```bash
 ❯ POD_IP=$(kubectl get pods -l app=kuard -o jsonpath='{.items[0].status.podIP}')
 
-❯ kubectl exec pod/curl curl http://$POD_IP:8080/
+❯ kubectl exec pod/curl -- curl http://$POD_IP:8080/
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100  1471  100  1471    0     0   287k      0 --:--:-- --:--:-- --:--:--  359k
@@ -482,8 +492,6 @@ Get the IP of the `kuard` *Pod* and then run `curl` from the new `curl` *Pod*.
   <title>KUAR Demo</title>
   ...
 ```
-
-Delete the `curl` *Pod* once done with `kubectl delete pod/curl`.
 
 In the above command you may notice the `-o jsonpath='{.items[0].status.podIP}'` part, the API returns JSON so we can use JSONPath to get specific fields, as we are using a selector `-l app=kuard` rather than a specific *Pod* name it returns an array, hence the `items[0]`.
 
@@ -520,14 +528,14 @@ Apply this file as normal `kubectl apply -f 4-service.yaml`.
 You will see a new service is created
 
 ```bash
-NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE    SELECTOR
-service/kuard        ClusterIP   10.43.133.122   <none>        8888/TCP   2s     app=kuard
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+service/kuard        ClusterIP   10.43.39.5   <none>        8888/TCP   7s    app=kuard
 ```
 
 If you perform the previous `curl` tests you will see you can now communicate with the *Service* using the "CLUSTER-IP" on the `port`; more importantly, you will now have a DNS name for the service.
 
 ```bash
-❯ kubectl exec pod/curl curl http://kuard:8888
+❯ kubectl exec pod/curl -- curl http://kuard:8888
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100  1468  100  1468    0     0   358k      0 --:--:-- --:--:-- --:--:--  358k
@@ -561,7 +569,7 @@ metadata:
 subsets:
   - addresses:
     - ip: 10.42.1.7
-      nodeName: k3d-dev-worker-1
+      nodeName: k3d-dev-agent-1
       targetRef:
         kind: Pod
         name: kuard-6c7b4f7bf-wrlgw
@@ -582,43 +590,42 @@ After scaling the replicas the cluster looks like this (Again, from this point o
 
 ![Service](resources/images/figure5.png)
 
+Delete the `curl` *Pod* once done with `kubectl delete pod/curl`.
+
 ### Ingress
 
-Previously we mentioned that you need to provide your own *Ingress Controller*, thankfully k3s comes with Traefik already configured so now we can create an *Ingress* resource.
+Previously we mentioned that you need to provide your own *Ingress Controller*, thankfully k3d comes with Traefik already configured so now we can create an *Ingress* resource.
 
 Create a file called `5-ingress.yaml` with the following content.
 
 ```yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: kuard
   labels:
     app: kuard
-  annotations:
-    kubernetes.io/ingress.class: traefik
 spec:
   rules:
     - host: kuard.cluster.local
       http:
         paths:
           - path: /
+            pathType: Prefix
             backend:
-              serviceName: kuard
-              servicePort: 8888
+              service:
+                name: kuard
+                port:
+                  number: 8888
 ```
 
 The *Ingress* defines the `host`, along with `paths`, typically you would just be using a `path` of `/` but there may be situations where you want different paths in an *Ingress* to be backed by different *Services* (thus different *Pods*); under the `path` we then specify which *Service* backs the *Ingress* and the port to map to. The *Ingress Controller* runs on the usual HTTP and HTTPS ports; for HTTPS, SSL is (normally) terminated at the *Ingress* and then communication with the *Pod* is via HTTP.
 
-You may notice a new field called `annotations`, don't worry about this for now, it will be explained later, just know that they are similar to *Labels* but used for configuration. The first field `kubernetes.io/ingress.class` is not strictly required, however, as mentioned in the introduction, a cluster can have multiple *Ingress Controllers* installed, so it is recommended that you always supply the name of the implementation you wish to use to prevent issues.
-
-> Note: In Kubernetes 1.18 `kubernetes.io/ingress.class` has officially been replaced with the `spec.ingressClassName` field and the *IngressClass* resource, however the various *Ingress Controllers* will need to be updated to support it.
-
 Apply this file in the usual way and you will see that an *Ingress* is created.
 
 ```bash
-NAME                       HOSTS                 ADDRESS      PORTS   AGE
-ingress.extensions/kuard   kuard.cluster.local   172.21.0.5   80      119s
+NAME                              CLASS    HOSTS                 ADDRESS                                       PORTS   AGE
+ingress.networking.k8s.io/kuard   <none>   kuard.cluster.local   172.19.0.3,172.19.0.4,172.19.0.5,172.19.0.6   80      90s
 ```
 
 Now our cluster looks like this
@@ -644,6 +651,66 @@ As you can see we now get the response we expect, so to get it working correctly
 ![KUARD](resources/images/browser.png)
 
 We now have a fully working application!
+
+#### Ingress Classes
+
+It is possible to have more than one *Ingress Controller* on your cluster, for example if you want one instance configured to gzip the response and one instance which doesn't.
+
+You can even have completely different implementations installed, for example [https://traefik.io/traefik/](Traefik), [https://docs.konghq.com/kubernetes-ingress-controller/latest/](Kong) and [https://github.com/kubernetes/ingress-nginx](Ingress-NGINX).
+
+To tell Kubernetes which *Ingress Controller* to use for a particular *Ingress* you need to specify the *IngressClass*, if none is specified then the *IngressClass* which is default will be used. Some Ingress Controllers will listen for ingresses without a class defined, but this is not the recommended way to work.
+
+> NOTE: Prior to version 1.18, Kubernetes did not have the IngressClass resource, instead Ingress Controllers looked at all ingresses and read from the `kubernetes.io/ingress.class` annotation. Don't worry about *Annotations* for now, they will be explained later, just know that they are similar to *Labels* but used for configuration.
+> 
+> This has now been replaced with the `ingressClassName` field.
+
+As mentioned, k3s comes with the Traefik; however no *IngressClass* is defined as it is not needed when there is only one Ingress Controller, but there is no harm defining it, in fact defining it now will make it easier to maintain the cluster in future if you install a second Ingress Controller.
+
+Create a file called `5.1-ingress-class.yaml` with the following content.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: traefik
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: "true"
+spec:
+  controller: traefik.io/ingress-controller
+```
+
+Apply this file and from now on, any *Ingress* without an *ingressClassName* specified will use Traefik, as the `ingressclass.kubernetes.io/is-default-class` annotation is `true` .
+
+However, it is recommended that you explicitly define on all Ingresses, which class they use so that if the default changes in future it does not impact existing resources; to do this simply update the *Ingress* to add the `ingressClassName`
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kuard
+  labels:
+    app: kuard
+spec:
+	ingressClassName: traefik
+  rules:
+    - host: kuard.cluster.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kuard
+                port:
+                  number: 8888
+```
+
+Apply this file in the usual way and you will see that the Ingress now has a class defined.
+
+```bash
+NAME    CLASS     HOSTS                 ADDRESS                                       PORTS   AGE
+kuard   traefik   kuard.cluster.local   172.19.0.3,172.19.0.4,172.19.0.5,172.19.0.6   80      45m
+```
 
 ## Injecting Configuration
 
@@ -712,7 +779,7 @@ spec:
             name: kuard
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -764,7 +831,7 @@ spec:
     spec:
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -1024,7 +1091,7 @@ spec:
             name: kuard
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -1054,7 +1121,7 @@ Now, change your browser so that you are using the address `https://kuard.cluste
 Let's update the *Ingress* to use the certificate we previously created. To do this we add `spec.tls` to the *Ingress*, this tells the *Ingress Controller* where it can find the certificate and which host it applies to (as you can have multiple hosts in the same *Ingress*).
 
 ```yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: kuard
@@ -1066,9 +1133,12 @@ spec:
       http:
         paths:
           - path: /
+            pathType: Prefix
             backend:
-              serviceName: kuard
-              servicePort: 8888
+              service:
+                name: kuard
+                port:
+                  number: 8888
   tls:
     - hosts:
         - kuard.cluster.local
@@ -1081,14 +1151,14 @@ After applying the *Ingress* changes the cluster now looks like this
 
 ![Ingress with Secret](resources/images/figure9.png)
 
-This may sound like a lot of work, thankfully there are ways to automate this process, with the use of [cert-manager](https://cert-manager.io) certificates can automatically be requested from [Let's Encrypt](https://letsencrypt.org) simply by creating an *Ingress* with an *Annotation*.
+This may sound like a lot of work, thankfully there are ways to automate this process, with the use of [cert-manager](https://cert-manager.io), certificates can automatically be requested from [Let's Encrypt](https://letsencrypt.org) simply by creating an *Ingress* with an *Annotation*.
 
 We haven't talked about *Annotations* yet. Much like *Labels*, they are for applying metadata to a resource, however they are meant for programmatic usage, where as *Labels* are for humans.
 
 ```bash
 ❯ kubectl explain ingress.metadata.annotations
 KIND:     Ingress
-VERSION:  extensions/v1beta1
+VERSION:  networking.k8s.io/v1
 
 FIELD:    annotations <map[string]string>
 
@@ -1117,24 +1187,22 @@ annotations:
   traefik.ingress.kubernetes.io/redirect-permanent: "true"
 ```
 
-These *Annotations* are Traefik specific values (hence the prefix `traefik.ingress.kubernetes.io`), telling the *Ingress Controller* to accept traffic on the HTTP and HTTPS backends & to redirect all traffic to the HTTPS port using a HTTP 301 redirect. More about the *Annotations* can be found in the [Traefik documentation](https://docs.traefik.io/v1.7/configuration/backends/kubernetes/#annotations) but again it is not essential to read now. If you wanted the traffic on every *Ingress* to always redirect to HTTPS you could instead do so by editing the Traefik configuration, which is stored in a *ConfigMap* in the "kube-system" *Namespace*, but doing so is outside of the scope of this tutorial (just remember to restart Traefik's *Pods*).
+These *Annotations* are Traefik specific values (hence the prefix `traefik.ingress.kubernetes.io`), telling the *Ingress Controller* to accept traffic on the HTTP and HTTPS backends & to redirect all traffic to the HTTPS port using a HTTP 301 redirect. More about the *Annotations* can be found in the [Traefik documentation](https://docs.traefik.io/v1.7/configuration/backends/kubernetes/#annotations) but again it is not essential to read now. If you wanted the traffic on every *Ingress* to always redirect to HTTPS you could instead do so by editing the Traefik configuration, but doing so is outside the scope of this tutorial, but you can see which options are passed to it by viewing the deployment.
 
 ```bash
-❯ kubectl -n kube-system get configmap traefik -o yaml
-apiVersion: v1
-data:
-  traefik.toml: |
-    # traefik.toml
-    logLevel = "info"
-    defaultEntryPoints = ["http","https"]
-    ...
+❯ kubectl -n kube-system get deployment traefik -o yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+     ...
 ```
 
 Note: It has not been mentioned before, but the `-n` parameter is how you run commands in different *Namespaces*, it is also possible to supply the *Namespace* on resource definitions alongside the name; you can also change `kubectl` so that the *Namespace* it uses if none is supplied is not "default".
 
 ```bash
 ❯ kubectl config set-context --current --namespace=my-awesome-namespace
-Context "dev" modified.
+Context "k3d-dev" modified.
 ```
 
 ## Persisting Data
@@ -1147,8 +1215,8 @@ Just as with *Ingress Controllers* and *NetworkPolicies* you are expected to pro
 
 ```bash
 ❯ kubectl get storageclasses
-NAME                   PROVISIONER             AGE
-local-path (default)   rancher.io/local-path   24h
+NAME                   PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+local-path (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  109m
 ```
 
 You may have already realised, but the `(default)` implies that you can have more than one *StorageClass* configured, so it is recommended that you define the required *StorageClass* on any *PersistentVolumeClaim*.
@@ -1181,8 +1249,8 @@ persistentvolumeclaim/kuard created
 In the other terminal you will see the *PersistentVolumeClaim* has been created.
 
 ```bash
-NAME    STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-kuard   Pending                                      local-path     8s
+NAME                          STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE   VOLUMEMODE
+persistentvolumeclaim/kuard   Pending                                      local-path     5s    Filesystem
 ```
 
 You will notice that the "STATUS" of the claim is Pending, and it will stay like this until we use it, you can try `kubectl get persistentvolumes` and you will see that the *PersistentVolume* has not been created yet.
@@ -1214,7 +1282,7 @@ spec:
             claimName: kuard
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -1234,11 +1302,11 @@ spec:
 Apply the manifest and you should see the *PersistentVolumeClaim* change, and you will also see the new *PersistentVolume* resource.
 
 ```bash
-NAME    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-kuard   Bound    pvc-14f9b407-3dff-498b-beaf-d72f9f0018e0   100Mi      RWO            local-path     11m
+NAME                          STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE   VOLUMEMODE
+persistentvolumeclaim/kuard   Bound    pvc-e8bb05c3-e184-4b4d-92bf-13514a013de8   100Mi      RWO            local-path     70s   Filesystem
 
-NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM           STORAGECLASS   REASON   AGE
-pvc-14f9b407-3dff-498b-beaf-d72f9f0018e0   100Mi      RWO            Delete           Bound    default/kuard   local-path              17s
+NAME                                                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM           STORAGECLASS   REASON   AGE   VOLUMEMODE
+persistentvolume/pvc-e8bb05c3-e184-4b4d-92bf-13514a013de8   100Mi      RWO            Delete           Bound    default/kuard   local-path              9s    Filesystem
 ```
 
 So now that a *PersistentVolume* has been created, the cluster looks like this.
@@ -1251,10 +1319,10 @@ The `local-path` provisioner creates a directory on the filesystem of the *Node*
 
 ```bash
 ❯ kubectl get persistentvolumes -o jsonpath='{.items[0].spec.nodeAffinity.required.nodeSelectorTerms[0].matchExpressions[0].values[0]}'
-k3d-dev-worker-2
+k3d-dev-agent-2
 ```
 
-You will notice this matches the "NODE" of the *Pods*, in fact if you were paying attention, when the *PersistentVolume* was created you would have noticed a *Pod* being evicted and recreated on the same *Node* as the other *Pod*. The reason for this is that all the *Pods* need to be able to access the local path, so as you can imagine, you should not use the `local-path` *StorageClass* in a real cluster, cloud providers normally include an *StorageClass* for creating native storage resources (provisioned by the *Cloud-Controller Manager*) and there are other options available such as the [NFS Client Provisioner](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client).
+You will notice this matches the "NODE" of the *Pods*, in fact if you were paying attention, when the *PersistentVolume* was created you would have noticed a *Pod* being evicted and recreated on the same *Node* as the other *Pod*. The reason for this is that all the *Pods* need to be able to access the local path, so as you can imagine, you should not use the `local-path` *StorageClass* in a real cluster, cloud providers normally include a *StorageClass* for creating native storage resources (provisioned by the *Cloud-Controller Manager*) and there are other options available such as the [NFS Client Provisioner](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client).
 
 Use the following command to get the path of the directory on the *Node*.
 
@@ -1266,10 +1334,10 @@ Use the following command to get the path of the directory on the *Node*.
 We can these use these 2 values to create a file directly on the *Node*.
 
 ```bash
-NODE=$(kubectl get persistentvolumes -o jsonpath='{.items[0].spec.nodeAffinity.required.nodeSelectorTerms[0].matchExpressions[0].values[0]}')
-PATH=$(kubectl get persistentvolumes -o jsonpath='{.items[0].spec.hostPath.path}'
+NODENAME=$(kubectl get persistentvolumes -o jsonpath='{.items[0].spec.nodeAffinity.required.nodeSelectorTerms[0].matchExpressions[0].values[0]}')
+NODEPATH=$(kubectl get persistentvolumes -o jsonpath='{.items[0].spec.hostPath.path}')
 
-docker exec $NODE sh -c "echo 'Hello from the Node' > $PATH/hello.txt"
+docker exec $NODENAME sh -c "echo 'Hello from the Node' > $NODEPATH/hello.txt"
 ```
 
 Now if you go back to the application in the browser you should see the file in the mounted directory, but how do you know this is persistent?
@@ -1287,7 +1355,7 @@ Use the file browser to check the file. Now kill the *Pod* and once the new one 
 
 ```bash
 ❯ kubectl delete pods -l app=kuard
-pod "kuard-66b687b4bd-r4hsk" deleted
+pod "kuard-76d96ddff7-zcpmb" deleted
 ```
 
 ## Maintaining Application and Cluster Health
@@ -1336,7 +1404,7 @@ spec:
             name: kuard
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -1376,10 +1444,10 @@ Scale to 3 replicas also
 
 Now, if you look at the other terminal you should see that the 3 *Pods* should each be scheduled on a different *Node*. You can also see that the *ReplicaSet* had "DESIRED", "CURRENT" and "READY" all set to 3.
 
-We are going to shutdown the *Node* "k3d-dev-worker-1" to simulate it becoming unreachable.
+We are going to shutdown the *Node* "k3d-dev-agent-1" to simulate it becoming unreachable.
 
 ```bash
-❯ docker stop k3d-dev-worker-1
+❯ docker stop k3d-dev-agent-1
 ```
 
 After approximately 30 seconds the "STATUS" of the *Node* should change to "NotReady", then approximately 5 seconds later the *Pod* will change to "Terminating" and a new one created. This shows that the cluster has automatically recovered from a missing *Node*. The status will stay at "Terminating" because the *API Server* has not yet been told that the *Pod* has been terminated, once the *Node* recovers *Kubelet* will see that the *Pod* is supposed to be terminated so will do so.
@@ -1387,7 +1455,7 @@ After approximately 30 seconds the "STATUS" of the *Node* should change to "NotR
 Start the *Node* again and you will see this happen.
 
 ```bash
-❯ docker start k3d-dev-worker-1
+❯ docker start k3d-dev-agent-1
 ```
 
 At this point you have 2 *Pods* from the same *ReplicaSet* on the same *Node*, in a production environment this is less likely to happen, it is just that we have the exactly same number of replicas as we do Nodes; however you can "fix" this simply by deleting one of the *Pods*. Just like there is the *Scheduler* component, there is also a [Descheduler](https://github.com/kubernetes-sigs/descheduler) to take care of this automatically but it is not a core component, this actually runs as a *Job*.
@@ -1496,7 +1564,7 @@ Typically you only really need to supply the first 2 of these, `cpu` and `memory
 spec:
   containers:
     - name: kuard
-      image: gcr.io/kuar-demo/kuard-amd64:purple
+      image: gcr.io/kuar-demo/kuard-arm64:purple
       resources:
         requests:
           cpu: 100m
@@ -1510,13 +1578,13 @@ This means that during *Scheduling* the containers needs at least one tenth of a
 
 Now let's try to see what happens when these limits are breached, obviously this is a bit hard to force.
 
-> WARNING: Do not try these experiments if you are running this tutorial on a real Kubernetes cluster running on a cloud provider, you could accidentally cause more *Nodes* to be created which will cost you money especially if they are powerful machines.
+> WARNING: Do not try these experiments if you are running this tutorial on a real Kubernetes cluster running on a cloud provider, you could accidentally cause more *Nodes* to be created which will cost you money.
 
 Use the `describe` command to check the allocated resources on each of your *Nodes*.
 
 ```bash
-❯ kubectl describe node/k3d-dev-worker-0
-Name:               k3d-dev-worker-0
+❯ kubectl describe node/k3d-dev-agent-0
+Name:               k3d-dev-agent-0
 Roles:              worker
 ...
 Capacity:
@@ -1543,12 +1611,6 @@ Allocated resources:
   ephemeral-storage  0 (0%)     0 (0%)
 ```
 
-Shut down 2 of the *Nodes*
-
-```bash
-❯ docker stop k3d-dev-worker-1 k3d-dev-worker-2
-```
-
 Create a file `10-pod-with-high-memory.yaml` containing a *Pod* with a container which has a `resources.requests.memory` more than your capacity, for example 1Ti, so that it looks something like the following
 
 ```yaml
@@ -1559,7 +1621,7 @@ metadata:
 spec:
   containers:
     - name: kuard
-      image: gcr.io/kuar-demo/kuard-amd64:purple
+      image: gcr.io/kuar-demo/kuard-arm64:purple
       resources:
         requests:
           memory: 1Ti
@@ -1574,9 +1636,9 @@ You can use the `describe` command to find out why
 Name:         limit-test
 ...
 Events:
-  Type     Reason            Age        From               Message
-  ----     ------            ----       ----               -------
-  Warning  FailedScheduling  <unknown>  default-scheduler  0/4 nodes are available: 4 Insufficient memory.
+  Type     Reason            Age   From               Message
+  ----     ------            ----  ----               -------
+  Warning  FailedScheduling  2s    default-scheduler  0/4 nodes are available: 1 node(s) had taint {node-role.kubernetes.io/master: }, that the pod didn't tolerate, 3 Insufficient memory.
 ```
 
 Exactly as you would expect! Delete the *Pod*, then edit the `memory` to a sensible value, apply the file and now you will see the is *Pod* created. If you `describe` the *Pod* you will instead see this time that it was Scheduled, Pulled, Created and Started.
@@ -1592,62 +1654,25 @@ Apply the file and once again run `describe`, the output again says why the *Pod
 Name:         limit-test
 ...
 Events:
-  Type     Reason            Age        From               Message
-  ----     ------            ----       ----               -------
-  Warning  FailedScheduling  <unknown>  default-scheduler  0/4 nodes are available: 4 Insufficient cpu.
+  Type     Reason            Age   From               Message
+  ----     ------            ----  ----               -------
+  Warning  FailedScheduling  2s    default-scheduler  0/4 nodes are available: 1 node(s) had taint {node-role.kubernetes.io/master: }, that the pod didn't tolerate, 3 Insufficient cpu.
 ```
 
-We are now going to make the *Pod* run a stress test to use up the available memory.
+You can run a stress test for the memory and CPU to see what happens when the limits are breached by using the following examples; unfortunately, at present these examples do not work on k3d.
 
-Delete the *Pod* and then create a new manifest called `11-pod-with-low-memory.yaml` which looks something like the following, set the `resources.requests` to sensible values and set the `resources.limits` higher but not too high.
+https://kubernetes.io/docs/tasks/configure-pod-container/assign-memory-resource/
 
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: limit-test
-spec:
-  containers:
-    - name: stress
-      image: polinux/stress
-      resources:
-        requests:
-          memory: 50Mi
-          cpu: 100m
-        limits:
-          memory: 100Mi
-          cpu: 110m
-      command: ["stress"]
-      args: ["--vm", "10", "--vm-bytes", "250M", "--vm-hang", "1", "--vm-keep"]
-```
+https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/
 
-Apply the manifest, the *Pod* will start and it will start using up more memory. You should soon see the *Pod* status change to "OOMKilled", the container will restart a few times and eventually the *Pod* ends up with a status of "CrashLoopBack" (this is because our *Pod* is crashing quickly and often, normally it would just restart). Describe the *Pod* and you will see it is being killed because it is out of memory.
-
-```bash
-❯ kubectl describe pod/limit-test
-Name:         limit-test
-...
-Containers:
-  stress:
-    ...
-    State:          Terminated
-      Reason:       OOMKilled
-      Exit Code:    3
-      Started:      Wed, 22 Jan 2020 21:48:43 +0000
-      Finished:     Wed, 22 Jan 2020 21:48:48 +0000
-```
-
-CPU throttling is harder to demonstrate, I was not able to get a demo working properly on a virtual cluster but you can find an example on the [Kubernetes site](https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/).
-
-Now we've finished, delete the *Pod* and start the *Nodes* again.
+Now we've finished, delete the *Pod*.
 
 ```bash
 ❯ kubectl delete pod/limit-test
 pod "limit-test" deleted
-❯ docker start k3d-dev-worker-1 k3d-dev-worker-2
 ```
 
-Create the file `12-deployment-with-resources.yaml` with sensible *ResourceRequirements*, then apply it. 
+Create the file `11-deployment-with-resources.yaml` with sensible *ResourceRequirements*, then apply it. 
 
 ```yaml
 apiVersion: apps/v1
@@ -1680,7 +1705,7 @@ spec:
             claimName: kuard
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -1710,7 +1735,7 @@ Depending on how you configure the *ResourceRequirements* for your *Pods*, Kuber
 
 They are as follows, in descending order of priority. 
 
-- `Guaranteed` - A *Pod* is given this class when every *container* has `resources.requests.memory` and `resources.limits.memory` defined with the same value (the same value within each *container* not the same value for every *container*, i.e. container `nginx` can have different values to the container `php-fpm`); and when every  *container* has `resources.requests.cpu` and `resources.limits.cpu` defined with the same value. If a `limit` is defined but a `request` is not, Kubernetes will automatically give them the same value.
+- `Guaranteed` - A *Pod* is given this class when every *container* has `resources.requests.memory` and `resources.limits.memory` defined with the same value (the same value within each *container* not the same value for every *container*, i.e. container `nginx` can have different values to the container `php-fpm`); and when every *container* has `resources.requests.cpu` and `resources.limits.cpu` defined with the same value. If a `limit` is defined but a `request` is not, Kubernetes will automatically give them the same value.
 - `Burstable` - A *Pod* if given this class if it does not meet the criteria for `Guaranteed` but at least one of the `resources.requests.memory` or `resources.requests.cpu` is set on at least 1 container. When `limits` are not set the *Pod* will only be limited by the *Node* capacity or the *ResourceQuota*.
 - `BestEffort` - A *Pod* which does not match the criteria for either `Guaranteed` or `Burstable` is given this class. These *Pods* are most likely to be evicted if there is resource contention, however, as they do not have resource requirements assigned they are allowed to use all available resources until it is required by another *Pod*.
 
@@ -1778,7 +1803,7 @@ FIELDS:
      Scheme to use for connecting to the host. Defaults to HTTP.
 ```
 
-Create the file `13-deployment-with-probes.yaml` with the following content.
+Create the file `12-deployment-with-probes.yaml` with the following content.
 
 ```yaml
 apiVersion: apps/v1
@@ -1811,7 +1836,7 @@ spec:
             claimName: kuard
       containers:
         - name: kuard
-          image: gcr.io/kuar-demo/kuard-amd64:purple
+          image: gcr.io/kuar-demo/kuard-arm64:purple
           ports:
             - name: http
               containerPort: 8080
@@ -1891,7 +1916,7 @@ metadata:
 subsets:
 - notReadyAddresses:
   - ip: 10.42.0.6
-    nodeName: k3d-dev-worker-0
+    nodeName: k3d-dev-agent-0
     targetRef:
       kind: Pod
       name: kuard-6fc5cb67d6-mnqb8
@@ -1905,7 +1930,7 @@ If you try to reload the page you'll get "Service Unavailable". Wait for a while
 
 Obviously you wouldn't really be running with 1 *replica*, so increase to 3 *replicas* and try the various options again, you will see that the application keeps working even when the *probes* are failing on a particular *Pod*.
 
-Note: When you use the probe pages you will see inconsistent results as you will be making requests to, and receiving responses from, different *Pods* each request. You may be wondering if there is a way to ensure all requests from a single user goes to the same *Pod*, for example if you have PHP sessions? Normally you would not want to do this as it would typically be better to handle this at the application level, for example using a database or [memcached](https://memcached.org) instance to store sessions; however you can use the *Service* `spec.sessionAffinity` field to do this but "sticky sessions" are a violation of [The Twelve Factor App](https://12factor.net/processes).
+Note: When you use the probe pages you will see inconsistent results as you will be making requests to, and receiving responses from, different *Pods* each request. You may be wondering if there is a way to ensure all requests from a single user goes to the same *Pod*, for example if you have PHP sessions? Normally you would not want to do this as it would typically be better to handle this at the application level, for example using a database or [memcached](https://memcached.org) instance to store sessions; however you can use the *Service* `spec.sessionAffinity` field to do this, but "sticky sessions" are a violation of [The Twelve Factor App](https://12factor.net/processes).
 
 ## Summary
 

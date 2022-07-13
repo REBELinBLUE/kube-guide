@@ -9,6 +9,7 @@ Now that you have followed through a step by step tutorial, we will discuss some
 - Using *PodSecurityPolicy* and *PodDisruptionBudget*
 - Using multiple clusters
 - *ServiceAccounts*, *Roles* and *RoleBindings*
+- Sidecars
 
 ## Updating Resources
 
@@ -84,7 +85,7 @@ deployment.apps/kuard image updated
 
 More useful though is `kubectl patch`, this allows you to patch any resource using YAML or JSON. 
 
-Create a file `14-patch.yaml` with the following content
+Create a file `13-patch.yaml` with the following content
 
 ```yaml
 spec:
@@ -314,7 +315,7 @@ You will see that `targetCPUUtilizationPercentage` has been replaced with `metri
 
 Previously we created a *Pod* designed to increase memory usage until it was `OOMKilled`, now let's create a *Deployment* so that we can experiment with *HorizontalPodAutoscalers*. 
 
-Create the file `15-deployment-with-memory.yaml` and apply it.
+Create the file `14-deployment-with-memory.yaml` and apply it.
 
 ```yaml
 apiVersion: apps/v1
