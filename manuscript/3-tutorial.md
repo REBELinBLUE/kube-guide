@@ -193,7 +193,7 @@ FIELDS:
      ...
 ```
 
-Before going any further, you should open a new terminal (remember to run the `export` command detailed previously) and run the following command, which will get a list of the *Nodes* plus all other resources we will be creating in the "default" *Namespace* and will refresh every 2 seconds, keep this running whilst performing the other commands to see the operations happening.
+Before going any further, you should open a new terminal and run the following command, which will get a list of the *Nodes* plus all other resources we will be creating in the "default" *Namespace* and will refresh every 2 seconds, keep this running whilst performing the other commands to see the operations happening.
 
 ```bash
 watch kubectl get nodes,pod,deploy,rs,svc,ing,cm,secret,pvc,pv -o wide
