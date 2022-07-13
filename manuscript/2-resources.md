@@ -246,4 +246,6 @@ A *PodSecurityPolicy* is a cluster level resource which controls sensitive aspec
 
 ### PodDisruptionBudget
 
+![PodDisruptionBudget Icon](resources/images/icons/resources/pdb-128.png)
+
 The *PodDisruptionBudget* specifies the percentage of *Pod* replicas which can be unavailable, for example during a rolling update or when draining a *Node* (evicting all the *Pods*) so that it can be restarted to perform a OS update.

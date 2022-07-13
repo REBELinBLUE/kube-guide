@@ -9,6 +9,7 @@ Now that you have followed through a step by step tutorial, we will discuss some
 - Using *PodSecurityPolicy* and *PodDisruptionBudget*
 - Using multiple clusters
 - *ServiceAccounts*, *Roles* and *RoleBindings*
+- Sidecars
 
 ## Updating Resources
 
